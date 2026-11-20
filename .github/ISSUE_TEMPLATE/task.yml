@@ -1,0 +1,87 @@
+name: Implementation task
+description: Scoped, parallelizable work item ready for the roadmap board
+labels: [task, needs-triage]
+body:
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Roadmap phase
+      options:
+        - Phase 1 — Usable map
+        - Phase 2 — 3D
+        - Phase 3 — Living world
+        - Maintenance / Infra
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Primary area
+      description: Helps contributors spot non-overlapping parallel work.
+      options:
+        - area:map
+        - area:layers
+        - area:hud
+        - area:search
+        - area:tiles
+        - area:data
+        - area:infra
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Estimated size
+      description: If L, break into sub-issues before moving to Ready.
+      options:
+        - size:S (hours, <150 LOC)
+        - size:M (1-2 days, <400 LOC)
+        - size:L (split before starting)
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal & context
+      description: What are we building and why? Link any relevant ADR or feature request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Clear checklist for when this is done.
+      placeholder: |
+        - [ ] ...
+        - [ ] Unit tests cover pure logic
+        - [ ] Keyboard & 44px touch targets verified (if HUD)
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Explicitly call out what this task should NOT touch to prevent scope creep and merge conflicts.
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies & shared files
+      description: List blocking issues (also link via GitHub "Blocked by") and any shared wiring files this touches.
+      placeholder: |
+        - Blocked by: none (safe to start in parallel)
+        - Shared files touched: e.g. src/features/map/components/map-canvas.tsx, src/app/globals.css
+
+  - type: checkboxes
+    id: guardrails
+    attributes:
+      label: Guardrails check
+      options:
+        - label: No new architectural pattern (or an ADR in docs/adr/ is included/linked)
+        - label: Follows docs/data-and-assets.md (no extracted/leaked/official assets or uncited data)
+        - label: No per-frame React state; deck.gl/window code stays client-only

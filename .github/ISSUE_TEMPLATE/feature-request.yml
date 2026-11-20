@@ -1,7 +1,19 @@
 name: Feature request
 description: Propose a new capability. Discuss it here before building anything large.
-labels: [enhancement]
+labels: [enhancement, needs-triage]
 body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - area:map
+        - area:layers
+        - area:hud
+        - area:search
+        - area:tiles
+        - area:data
+        - area:infra
   - type: textarea
     id: problem
     attributes:
@@ -20,3 +32,4 @@ body:
       options:
         - label: Works top-down first; any 3D adds something rather than being required
         - label: Keeps pan/zoom at 60 fps
+        - label: Works via DOM/keyboard as well as canvas (WCAG 2.2 AA)
