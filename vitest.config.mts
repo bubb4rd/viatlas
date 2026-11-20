@@ -11,6 +11,6 @@ export default defineConfig({
     // Pure logic runs in node (fast). Component tests opt in with
     // `// @vitest-environment jsdom` at the top of the file.
     environment: "node",
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.mjs"],
   },
 });
