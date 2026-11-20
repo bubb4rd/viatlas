@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+# Binary map assets: never diff or normalize.
+*.png binary
+*.jpg binary
+*.webp binary
+*.avif binary
+*.ktx2 binary
+*.glb binary
+*.pbf binary
+*.pmtiles binary
+*.arrow binary
+
+pnpm-lock.yaml linguist-generated=true -diff
