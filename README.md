@@ -42,6 +42,7 @@ Because Leonida isn't on Earth, Viatlas runs with no third-party basemap. Every 
 ### Tactical 2D & 3D camera
 
 - **Top-down first, 3D on demand.** Starts north-up in 2D for speed and readability, with a `600 ms` interpolated transition to a pitched 3D view (`50°` pitch, `-20°` bearing) that unlocks drag and touch rotation.
+- **HUD camera buttons.** Zoom in, zoom out, and reset view (home position, north-up) are keyboard-operable buttons, so the camera never depends on scroll or drag alone.
 - **Zero per-frame React re-renders.** The deck.gl camera runs uncontrolled and mirrors its latest pose in a ref, keeping pan and zoom locked to the GPU render loop.
 - **Diegetic HUD & tactical grid.** Translucent glass panels sit over a `1 km` minor / `4 km` major reference grid (`24 km × 32 km` world bounds). HUD containers pass drags through (`pointer-events-none`) and follow WCAG 2.2 AA targets (`44 px` minimum touch targets, visible focus rings, `prefers-reduced-motion` support).
 

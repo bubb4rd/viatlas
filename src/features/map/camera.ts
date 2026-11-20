@@ -38,3 +38,26 @@ export const FLY_TO_TRANSITION = {
   transitionDuration: 500,
   transitionInterpolator: new FlyToInterpolator(),
 } as const;
+
+/** Zoom levels per HUD +/- press. */
+export const ZOOM_STEP = 1;
+
+/** Zoom by `delta` levels around the current center, clamped to the camera limits. */
+export function zoomBy(view: MapViewState, delta: number): MapViewState {
+  const min = INITIAL_VIEW_STATE.minZoom ?? -Infinity;
+  const max = INITIAL_VIEW_STATE.maxZoom ?? Infinity;
+  return { ...view, zoom: Math.min(max, Math.max(min, view.zoom + delta)) };
+}
+
+/** Home view, facing north, keeping the current mode's pitch. */
+export function resetView(view: MapViewState, mode: ViewMode): MapViewState {
+  const { longitude, latitude, zoom } = INITIAL_VIEW_STATE;
+  return {
+    ...view,
+    longitude,
+    latitude,
+    zoom,
+    pitch: MODE_POSE[mode].pitch,
+    bearing: 0,
+  };
+}

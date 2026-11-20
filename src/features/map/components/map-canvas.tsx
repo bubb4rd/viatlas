@@ -26,11 +26,15 @@ import {
   INITIAL_VIEW_STATE,
   MODE_POSE,
   MODE_TRANSITION,
+  resetView,
   type ViewMode,
+  ZOOM_STEP,
+  zoomBy,
 } from "../camera";
 import { createGridLayer } from "../layers/grid-layer";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
 import { worldToLngLat } from "../world";
+import { MapControls } from "./map-controls";
 import { ViewModeToggle } from "./view-mode-toggle";
 
 const VIEW = new MapView({ repeat: false });
@@ -143,6 +147,10 @@ export default function MapCanvas() {
     });
   }
 
+  function flyTo(next: MapViewState) {
+    setInitialViewState({ ...next, ...FLY_TO_TRANSITION });
+  }
+
   const visiblePois = isDefaultPoiFilter(poiFilter)
     ? DEFAULT_VISIBLE_POIS
     : filterPois(POIS, poiFilter);
@@ -182,6 +190,13 @@ export default function MapCanvas() {
         />
         <ViewModeToggle mode={mode} onChange={changeMode} />
       </div>
+      <MapControls
+        onZoomIn={() => flyTo(zoomBy(latestViewState.current, ZOOM_STEP))}
+        onZoomOut={() => flyTo(zoomBy(latestViewState.current, -ZOOM_STEP))}
+        onResetView={() =>
+          flyTo(resetView(latestViewState.current, modeRef.current))
+        }
+      />
     </>
   );
 }

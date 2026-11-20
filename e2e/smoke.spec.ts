@@ -47,3 +47,18 @@ test("intel layers popover opens, toggles filters, and closes on Escape", async 
   await page.keyboard.press("Escape");
   await expect(landmarks).toBeHidden();
 });
+
+test("HUD buttons zoom and reset the camera", async ({ page }) => {
+  await page.goto("/#map=13.00/1500/-2500");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(page).toHaveURL(/#map=14\.00\/1500\/-2500$/);
+
+  await page.getByRole("button", { name: "Zoom out" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#map=13\.00\/1500\/-2500$/);
+
+  await page.getByRole("button", { name: "Reset view to north" }).click();
+  await expect(page).toHaveURL(/#map=11\.50\/0\/0$/);
+});
