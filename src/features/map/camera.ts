@@ -3,7 +3,7 @@ import {
   LinearInterpolator,
   type MapViewState,
 } from "@deck.gl/core";
-import { worldToLngLat } from "./world";
+import { type WorldPoint, worldToLngLat } from "./world";
 
 export type ViewMode = "2d" | "3d";
 
@@ -59,5 +59,19 @@ export function resetView(view: MapViewState, mode: ViewMode): MapViewState {
     zoom,
     pitch: MODE_POSE[mode].pitch,
     bearing: 0,
+  };
+}
+
+/** Zoom a POI picked from the HUD list opens at, so it sits outside any cluster. */
+export const POI_FOCUS_ZOOM = 15;
+
+/** Center on a world point, zooming in to at least `POI_FOCUS_ZOOM`. */
+export function focusOn(view: MapViewState, point: WorldPoint): MapViewState {
+  const [longitude, latitude] = worldToLngLat(point);
+  return {
+    ...view,
+    longitude,
+    latitude,
+    zoom: Math.max(view.zoom, POI_FOCUS_ZOOM),
   };
 }

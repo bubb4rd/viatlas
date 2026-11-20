@@ -9,6 +9,7 @@ import {
 } from "@/features/pois/cluster";
 import { PoiDetailSheet } from "@/features/pois/components/poi-detail-sheet";
 import { PoiFilterPopover } from "@/features/pois/components/poi-filter-popover";
+import { PoiListPanel } from "@/features/pois/components/poi-list-panel";
 import { DEFAULT_VISIBLE_POIS, POIS } from "@/features/pois/data";
 import {
   filterPois,
@@ -23,6 +24,7 @@ import {
 import type { Poi } from "@/features/pois/poi";
 import {
   FLY_TO_TRANSITION,
+  focusOn,
   INITIAL_VIEW_STATE,
   MODE_POSE,
   MODE_TRANSITION,
@@ -182,6 +184,11 @@ export default function MapCanvas() {
     setInitialViewState({ ...next, ...FLY_TO_TRANSITION });
   }
 
+  function handleListSelect(poi: Poi) {
+    setSelectedPoiId(poi.id);
+    flyTo(focusOn(latestViewState.current, poi.position));
+  }
+
   const visiblePois = isDefaultPoiFilter(poiFilter)
     ? DEFAULT_VISIBLE_POIS
     : filterPois(POIS, poiFilter);
@@ -222,6 +229,11 @@ export default function MapCanvas() {
         />
         <ViewModeToggle mode={mode} onChange={changeMode} />
       </div>
+      <PoiListPanel
+        pois={visiblePois}
+        selectedPoiId={selectedPoiId}
+        onSelect={handleListSelect}
+      />
       <MapControls
         onZoomIn={() => flyTo(zoomBy(latestViewState.current, ZOOM_STEP))}
         onZoomOut={() => flyTo(zoomBy(latestViewState.current, -ZOOM_STEP))}

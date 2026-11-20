@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { INITIAL_VIEW_STATE, resetView, zoomBy } from "./camera";
+import {
+  focusOn,
+  INITIAL_VIEW_STATE,
+  POI_FOCUS_ZOOM,
+  resetView,
+  zoomBy,
+} from "./camera";
+import { worldToLngLat } from "./world";
 
 describe("zoomBy", () => {
   it("steps zoom and keeps the center", () => {
@@ -42,5 +49,20 @@ describe("resetView", () => {
 
   it("stays top-down in 2D", () => {
     expect(resetView(moved, "2d")).toMatchObject({ pitch: 0, bearing: 0 });
+  });
+});
+
+describe("focusOn", () => {
+  it("centers on the world point and zooms in to the focus zoom", () => {
+    const next = focusOn(INITIAL_VIEW_STATE, [1500, -2500]);
+    expect([next.longitude, next.latitude]).toEqual(
+      worldToLngLat([1500, -2500]),
+    );
+    expect(next.zoom).toBe(POI_FOCUS_ZOOM);
+  });
+
+  it("never zooms out", () => {
+    const close = { ...INITIAL_VIEW_STATE, zoom: 17 };
+    expect(focusOn(close, [0, 0]).zoom).toBe(17);
   });
 });
