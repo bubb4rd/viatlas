@@ -52,9 +52,12 @@ Every data entry records where it came from:
 ## Licensing
 
 - **Code:** Apache-2.0 ([LICENSE](../LICENSE)).
-- **Map data and original artwork:** not yet decided by the maintainers. The candidates are
-  CC BY-SA 4.0 and ODbL. Until a license is chosen, contributors agree that their data and artwork
-  contributions may be released under the open license the maintainers pick.
+- **Map data and original artwork:** [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+  ([ADR-0008](adr/0008-data-and-artwork-license.md)). This covers reviewed datasets under `data/`,
+  original base map artwork, custom map icons, and generated raster tiles. By submitting map data
+  or original artwork, contributors license their contributions under CC BY-SA 4.0.
+- **External `community` entries:** must use a license compatible with CC BY-SA 4.0 (such as
+  CC BY-SA 4.0, CC BY 4.0, or CC0) with `source.url` and `source.license` recorded.
 
 ## Takedowns
 
