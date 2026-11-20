@@ -50,6 +50,7 @@ Because Leonida isn't on Earth, Viatlas runs with no third-party basemap. Every 
 
 - **In-house GPU clustering.** A custom deck.gl `CompositeLayer` (`PoiLayer`) merges markers within a `48 px` screen radius and recomputes only when crossing integer zoom levels—no external clustering dependency and no React work on zoom.
 - **Interactive Intel Layers popover.** Built on [Base UI](https://base-ui.com) with live per-category counts, quick reset, and an opt-in switch for speculative locations (hidden by default).
+- **POI detail sheet.** Selecting a marker opens a non-modal panel with its category, world position, confidence, and source citation, plus a copy-link button for the deep link. `Escape` or the close button dismisses it and clears the selection.
 
 | Category       | Color token                | Source file                                            |
 | -------------- | -------------------------- | ------------------------------------------------------ |
