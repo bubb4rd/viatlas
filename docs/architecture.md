@@ -69,5 +69,8 @@ data/            reviewed source data (world-meter GeoJSON/JSON + provenance)
 
 ## Deployment
 
-Not chosen yet. Vercel is the natural fit: a preview per PR, and production on merge to `main`.
-Record the choice in an ADR.
+Hosted on **Netlify** (`viatlas.netlify.app`): every PR gets an automatic Deploy Preview URL with
+GitHub status checks, and merges to `main` deploy atomically to production
+([ADR-0006](adr/0006-netlify-deployment.md)). Feature flags (`NEXT_PUBLIC_FLAG_*`) and public
+endpoints are scoped by deploy context; generated raster tiles are served from a dedicated CDN
+rather than Netlify.
