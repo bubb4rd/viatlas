@@ -47,6 +47,9 @@ URL state lives in the hash as `key=value` params, so the page stays static and 
 re-renders. The camera is `#map=zoom/x/y` in 2D and `#map=zoom/x/y/pitch/bearing` in 3D, with x/y in
 world meters (`src/features/map/url-camera.ts`). It's written with `replaceState` 250 ms after the
 camera settles, and read on load and on `hashchange`. Invalid values are clamped, not rejected.
+POI filters (`#hide=<categories>`, `#speculative=1`) and the selected POI (`#poi=<id>`) follow the
+same read path (`src/features/map/url-pois.ts`) but are written right after the click that changes
+them. Default filters are omitted, and a `#poi` id that is unknown or hidden by the filter is dropped.
 
 ## Layers
 

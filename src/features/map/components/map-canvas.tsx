@@ -10,7 +10,6 @@ import {
 import { PoiFilterPopover } from "@/features/pois/components/poi-filter-popover";
 import { DEFAULT_VISIBLE_POIS, POIS } from "@/features/pois/data";
 import {
-  DEFAULT_POI_FILTER,
   filterPois,
   isDefaultPoiFilter,
   type PoiFilter,
@@ -33,6 +32,8 @@ import {
 } from "../camera";
 import { createGridLayer } from "../layers/grid-layer";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
+import { parsePoiHash } from "../url-pois";
+import { formatMapHash } from "../url-state";
 import { worldToLngLat } from "../world";
 import { MapControls } from "./map-controls";
 import { ViewModeToggle } from "./view-mode-toggle";
@@ -60,15 +61,21 @@ function getCursor({
  * state, so panning never re-renders the tree. Mode changes reseed
  * `initialViewState` from the latest camera with a transition.
  *
- * The camera round-trips through the URL hash: read on load and on
- * `hashchange`, written with `replaceState` once the camera settles.
+ * The camera, POI filter, and selected POI round-trip through the URL hash:
+ * read on load and on `hashchange`, written with `replaceState` once the
+ * camera settles or right after a filter or selection change.
  */
 export default function MapCanvas() {
   // Client-only component, so `window` exists on first render.
   const [fromUrl] = useState(() => parseCameraHash(window.location.hash));
   const [mode, setMode] = useState<ViewMode>(fromUrl?.mode ?? "2d");
-  const [poiFilter, setPoiFilter] = useState<PoiFilter>(DEFAULT_POI_FILTER);
-  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
+  const [poisFromUrl] = useState(() =>
+    parsePoiHash(window.location.hash, POIS),
+  );
+  const [poiFilter, setPoiFilter] = useState<PoiFilter>(poisFromUrl.poiFilter);
+  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(
+    poisFromUrl.selectedPoiId,
+  );
   const [initialViewState, setInitialViewState] = useState<MapViewState>(
     fromUrl?.viewState ?? INITIAL_VIEW_STATE,
   );
@@ -91,6 +98,9 @@ export default function MapCanvas() {
 
   useEffect(() => {
     function onHashChange() {
+      const pois = parsePoiHash(window.location.hash, POIS);
+      setPoiFilter(pois.poiFilter);
+      setSelectedPoiId(pois.selectedPoiId);
       const next = parseCameraHash(window.location.hash);
       if (!next) return;
       modeRef.current = next.mode;
@@ -103,6 +113,16 @@ export default function MapCanvas() {
       clearTimeout(urlWriteTimer.current);
     };
   }, []);
+
+  // Filter and selection change on discrete clicks, so write them right away.
+  useEffect(() => {
+    const { pathname, search, hash } = window.location;
+    const next = formatMapHash(hash, { poiFilter, selectedPoiId });
+    // An empty URL would keep the old hash, so drop it via the path instead.
+    if (next !== hash) {
+      window.history.replaceState(null, "", next || pathname + search);
+    }
+  }, [poiFilter, selectedPoiId]);
 
   function changeMode(next: ViewMode) {
     modeRef.current = next;
