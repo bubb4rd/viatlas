@@ -5,7 +5,12 @@ import {
 } from "@deck.gl/core";
 import { ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { worldToLngLat } from "@/features/map/world";
-import { clusterPois, type PoiItem } from "../cluster";
+import {
+  clusterPois,
+  DEFAULT_CLUSTER_RADIUS_PX,
+  type PoiCluster,
+  type PoiItem,
+} from "../cluster";
 import { DEFAULT_VISIBLE_POIS } from "../data";
 import type { Poi, PoiCategory } from "../poi";
 
@@ -20,11 +25,88 @@ const CATEGORY_COLOR: Record<PoiCategory, Rgba> = {
 };
 const CLUSTER_COLOR: Rgba = [58, 214, 197, 230];
 const OUTLINE_COLOR: Rgba = [7, 9, 12, 255];
+const SELECTED_OUTLINE_COLOR: Rgba = [231, 238, 243, 255];
+
+const MARKER_RADIUS_PX = 6;
+const SELECTED_MARKER_RADIUS_PX = 9;
+const MARKER_LINE_WIDTH_PX = 2;
+const SELECTED_MARKER_LINE_WIDTH_PX = 3;
 
 /** POIs closer than this on screen merge into a cluster. */
-const CLUSTER_RADIUS_PX = 48;
+export const CLUSTER_RADIUS_PX = DEFAULT_CLUSTER_RADIUS_PX;
 
-type PoiLayerProps = { pois: readonly Poi[] };
+export type PoiSelectionCallbacks = {
+  onSelectPoi?: (poi: Poi) => void;
+  onSelectCluster?: (cluster: PoiCluster) => void;
+};
+
+export type PoiLayerOptions = PoiSelectionCallbacks & {
+  pois?: readonly Poi[];
+  selectedPoiId?: string | null;
+};
+
+type PoiLayerProps = PoiSelectionCallbacks & {
+  pois: readonly Poi[];
+  selectedPoiId: string | null;
+};
+
+export function isSelectedPoiItem(
+  item: PoiItem,
+  selectedPoiId: string | null | undefined,
+): boolean {
+  return (
+    selectedPoiId != null &&
+    item.kind === "poi" &&
+    item.poi.id === selectedPoiId
+  );
+}
+
+export function getPoiMarkerRadius(
+  item: PoiItem,
+  selectedPoiId: string | null | undefined,
+): number {
+  if (item.kind === "cluster") return 11 + 3 * Math.log2(item.count);
+  return isSelectedPoiItem(item, selectedPoiId)
+    ? SELECTED_MARKER_RADIUS_PX
+    : MARKER_RADIUS_PX;
+}
+
+export function getPoiMarkerLineColor(
+  item: PoiItem,
+  selectedPoiId: string | null | undefined,
+): Rgba {
+  return isSelectedPoiItem(item, selectedPoiId)
+    ? SELECTED_OUTLINE_COLOR
+    : OUTLINE_COLOR;
+}
+
+export function getPoiMarkerLineWidth(
+  item: PoiItem,
+  selectedPoiId: string | null | undefined,
+): number {
+  return isSelectedPoiItem(item, selectedPoiId)
+    ? SELECTED_MARKER_LINE_WIDTH_PX
+    : MARKER_LINE_WIDTH_PX;
+}
+
+/**
+ * Dispatches a picked POI marker or cluster to the matching selection callback.
+ * Returns true when a callback handled the click so deck.gl stops bubbling.
+ */
+export function handlePoiPick(
+  item: PoiItem | undefined,
+  callbacks: PoiSelectionCallbacks,
+): boolean {
+  if (!item) return false;
+  if (item.kind === "poi") {
+    if (!callbacks.onSelectPoi) return false;
+    callbacks.onSelectPoi(item.poi);
+    return true;
+  }
+  if (!callbacks.onSelectCluster) return false;
+  callbacks.onSelectCluster(item);
+  return true;
+}
 
 /**
  * POIs as category-colored markers, clustered per integer zoom level.
@@ -34,7 +116,13 @@ type PoiLayerProps = { pois: readonly Poi[] };
 class PoiLayer extends CompositeLayer<PoiLayerProps> {
   static override layerName = "PoiLayer";
 
-  declare state: { zoom: number; items: PoiItem[] };
+  static override defaultProps = {
+    selectedPoiId: null,
+    onSelectPoi: { type: "function" as const, value: null, optional: true },
+    onSelectCluster: { type: "function" as const, value: null, optional: true },
+  };
+
+  declare state: { zoom: number; items: PoiItem[]; clusters: PoiCluster[] };
 
   override shouldUpdateState({
     changeFlags,
@@ -50,40 +138,53 @@ class PoiLayer extends CompositeLayer<PoiLayerProps> {
   override updateState({ props, oldProps }: UpdateParameters<this>): void {
     const zoom = Math.floor(this.context.viewport.zoom);
     if (props.pois !== oldProps.pois || zoom !== this.state.zoom) {
-      this.setState({
-        zoom,
-        items: clusterPois(props.pois, zoom, CLUSTER_RADIUS_PX),
-      });
+      const items = clusterPois(props.pois, zoom, CLUSTER_RADIUS_PX);
+      const clusters = items.filter(
+        (item): item is PoiCluster => item.kind === "cluster",
+      );
+      this.setState({ zoom, items, clusters });
     }
   }
 
+  override onClick(info: PickingInfo, pickingEvent: unknown): boolean {
+    if (handlePoiPick(info.object as PoiItem | undefined, this.props)) {
+      return true;
+    }
+    return super.onClick(info, pickingEvent);
+  }
+
   renderLayers() {
-    const { items } = this.state;
+    const { items, clusters } = this.state;
+    const { selectedPoiId } = this.props;
     return [
       new ScatterplotLayer<PoiItem>(
         this.getSubLayerProps({
           id: "markers",
           data: items,
           getPosition: (d: PoiItem) => worldToLngLat(d.position),
-          getRadius: (d: PoiItem) =>
-            d.kind === "poi" ? 6 : 11 + 3 * Math.log2(d.count),
+          getRadius: (d: PoiItem) => getPoiMarkerRadius(d, selectedPoiId),
           getFillColor: (d: PoiItem) =>
             d.kind === "poi" ? CATEGORY_COLOR[d.poi.category] : CLUSTER_COLOR,
-          getLineColor: OUTLINE_COLOR,
+          getLineColor: (d: PoiItem) => getPoiMarkerLineColor(d, selectedPoiId),
+          getLineWidth: (d: PoiItem) => getPoiMarkerLineWidth(d, selectedPoiId),
           radiusUnits: "pixels",
           lineWidthUnits: "pixels",
-          getLineWidth: 2,
           stroked: true,
           billboard: true,
           pickable: true,
+          updateTriggers: {
+            getRadius: selectedPoiId,
+            getLineColor: selectedPoiId,
+            getLineWidth: selectedPoiId,
+          },
         }),
       ),
-      new TextLayer<PoiItem>(
+      new TextLayer<PoiCluster>(
         this.getSubLayerProps({
           id: "cluster-counts",
-          data: items.filter((d) => d.kind === "cluster"),
-          getPosition: (d: PoiItem) => worldToLngLat(d.position),
-          getText: (d: PoiItem) => (d.kind === "cluster" ? `${d.count}` : ""),
+          data: clusters,
+          getPosition: (d: PoiCluster) => worldToLngLat(d.position),
+          getText: (d: PoiCluster) => `${d.count}`,
           getSize: 12,
           getColor: OUTLINE_COLOR,
           fontFamily: "ui-monospace, monospace",
@@ -96,8 +197,19 @@ class PoiLayer extends CompositeLayer<PoiLayerProps> {
   }
 }
 
-export function createPoiLayer(pois: readonly Poi[] = DEFAULT_VISIBLE_POIS) {
-  return new PoiLayer({ id: "pois", pois });
+export function createPoiLayer({
+  pois = DEFAULT_VISIBLE_POIS,
+  selectedPoiId = null,
+  onSelectPoi,
+  onSelectCluster,
+}: PoiLayerOptions = {}) {
+  return new PoiLayer({
+    id: "pois",
+    pois,
+    selectedPoiId,
+    onSelectPoi,
+    onSelectCluster,
+  });
 }
 
 /** Hover text for `DeckGL.getTooltip`; null for anything that isn't a POI item. */
