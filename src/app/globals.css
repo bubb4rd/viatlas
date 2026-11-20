@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Use these, never raw hex values in components.
+ * Direction: diegetic tactical HUD (glassy panels, mono labels, one hot accent).
+ */
+:root {
+  --bg: #07090c;
+  --surface: rgb(14 19 26 / 0.72);
+  --surface-strong: rgb(20 27 36 / 0.92);
+  --line: rgb(120 190 210 / 0.18);
+  --text: #e7eef3;
+  --text-dim: #8a9aa6;
+  --accent: #ff5f8f; /* Leonida sunset */
+  --accent-2: #3ad6c5; /* Gulf teal */
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@layer components {
+  .hud-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(12px);
+  }
+
+  .hud-label {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .hud-button {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    color: var(--text-dim);
+    transition:
+      color 120ms,
+      background-color 120ms;
+  }
+
+  .hud-button:hover {
+    color: var(--text);
+  }
+
+  .hud-button[aria-pressed="true"] {
+    color: var(--bg);
+    background: var(--accent);
+  }
+
+  .hud-button:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
+  }
+}

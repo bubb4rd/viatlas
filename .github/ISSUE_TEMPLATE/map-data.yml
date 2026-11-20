@@ -1,0 +1,39 @@
+name: Map data
+description: Add or correct a location, name, route, or area
+labels: [data]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Type
+      options: [New location, Correction, Removal]
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What and where
+      description: Name, category, and where it is (relative to known landmarks, or world coordinates if you have them).
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: "Required. For example: Trailer 2 @ 01:23, an official screenshot URL, or in-game observation with a description. Don't attach leaked or extracted material."
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      options: [confirmed, likely, speculative]
+    validations:
+      required: true
+  - type: checkboxes
+    id: policy
+    attributes:
+      label: Policy
+      options:
+        - label: This is not from leaked, datamined, or extracted game files (docs/data-and-assets.md)
+          required: true

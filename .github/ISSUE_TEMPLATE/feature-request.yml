@@ -1,0 +1,22 @@
+name: Feature request
+description: Propose a new capability. Discuss it here before building anything large.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What should a player be able to do that they can't today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed experience
+      description: Sketches and references from other games or maps are welcome (describe or link them; don't paste official art).
+  - type: checkboxes
+    id: pillars
+    attributes:
+      label: Fit with docs/vision.md
+      options:
+        - label: Works top-down first; any 3D adds something rather than being required
+        - label: Keeps pan/zoom at 60 fps

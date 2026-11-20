@@ -1,0 +1,13 @@
+# Default reviewers. Add maintainers or teams as the project grows.
+* @bubb4rd
+
+# Guardrails: changes here need a maintainer's approval.
+/AGENTS.md          @bubb4rd
+/CLAUDE.md          @bubb4rd
+/docs/adr/          @bubb4rd
+/docs/data-and-assets.md @bubb4rd
+/.github/           @bubb4rd
+/biome.json         @bubb4rd
+/tsconfig.json      @bubb4rd
+/lefthook.yml       @bubb4rd
+/package.json       @bubb4rd

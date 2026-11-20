@@ -1,0 +1,22 @@
+# Git hooks. Installed automatically by `pnpm install` (the `prepare` script).
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,mjs,cjs,ts,mts,tsx,jsx,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  jobs:
+    - name: subject format
+      run: node scripts/check-commit-msg.mjs {1}
+
+pre-push:
+  jobs:
+    - name: typecheck
+      run: pnpm typecheck
+    - name: unit tests
+      run: pnpm test
