@@ -64,7 +64,7 @@ the map chunk ([ADR-0004](adr/0004-poi-data-and-clustering.md)). Planned as data
 data/            reviewed source data (world-meter GeoJSON/JSON + provenance)
   → scripts/     validate against schema, simplify, convert large sets to binary/columnar
   → public/data/ small datasets shipped with the app
-  → CDN          raster tiles (XYZ or PMTiles) built from original artwork; never in git
+  → CDN          static 512px XYZ WebP tiles on Cloudflare R2 (ADR-0007); never in git
 ```
 
 ## Deployment
