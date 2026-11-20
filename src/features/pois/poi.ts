@@ -50,6 +50,10 @@ export type Poi = {
 
 const ID_PATTERN = /^poi-[a-z0-9]+(-[a-z0-9]+)*$/;
 
+export function isValidPoiId(value: string): boolean {
+  return ID_PATTERN.test(value);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
