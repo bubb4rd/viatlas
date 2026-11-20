@@ -1,4 +1,8 @@
-import { LinearInterpolator, type MapViewState } from "@deck.gl/core";
+import {
+  FlyToInterpolator,
+  LinearInterpolator,
+  type MapViewState,
+} from "@deck.gl/core";
 import { worldToLngLat } from "./world";
 
 export type ViewMode = "2d" | "3d";
@@ -28,4 +32,9 @@ export const MODE_POSE: Record<
 export const MODE_TRANSITION = {
   transitionDuration: 600,
   transitionInterpolator: new LinearInterpolator(["pitch", "bearing"]),
+} as const;
+
+export const FLY_TO_TRANSITION = {
+  transitionDuration: 500,
+  transitionInterpolator: new FlyToInterpolator(),
 } as const;

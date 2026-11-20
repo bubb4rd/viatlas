@@ -3,6 +3,10 @@
 import { MapView, type MapViewState } from "@deck.gl/core";
 import DeckGL from "@deck.gl/react";
 import { useEffect, useRef, useState } from "react";
+import {
+  computeClusterExpansion,
+  type PoiCluster,
+} from "@/features/pois/cluster";
 import { PoiFilterPopover } from "@/features/pois/components/poi-filter-popover";
 import { DEFAULT_VISIBLE_POIS, POIS } from "@/features/pois/data";
 import {
@@ -12,10 +16,13 @@ import {
   type PoiFilter,
 } from "@/features/pois/filter";
 import {
+  CLUSTER_RADIUS_PX,
   createPoiLayer,
   getPoiTooltip,
 } from "@/features/pois/layers/poi-layer";
+import type { Poi } from "@/features/pois/poi";
 import {
+  FLY_TO_TRANSITION,
   INITIAL_VIEW_STATE,
   MODE_POSE,
   MODE_TRANSITION,
@@ -23,6 +30,7 @@ import {
 } from "../camera";
 import { createGridLayer } from "../layers/grid-layer";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
+import { worldToLngLat } from "../world";
 import { ViewModeToggle } from "./view-mode-toggle";
 
 const VIEW = new MapView({ repeat: false });
@@ -56,6 +64,7 @@ export default function MapCanvas() {
   const [fromUrl] = useState(() => parseCameraHash(window.location.hash));
   const [mode, setMode] = useState<ViewMode>(fromUrl?.mode ?? "2d");
   const [poiFilter, setPoiFilter] = useState<PoiFilter>(DEFAULT_POI_FILTER);
+  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [initialViewState, setInitialViewState] = useState<MapViewState>(
     fromUrl?.viewState ?? INITIAL_VIEW_STATE,
   );
@@ -101,10 +110,51 @@ export default function MapCanvas() {
     });
   }
 
+  function changePoiFilter(next: PoiFilter) {
+    setPoiFilter(next);
+    if (selectedPoiId !== null) {
+      const nextVisible = isDefaultPoiFilter(next)
+        ? DEFAULT_VISIBLE_POIS
+        : filterPois(POIS, next);
+      if (!nextVisible.some((poi) => poi.id === selectedPoiId)) {
+        setSelectedPoiId(null);
+      }
+    }
+  }
+
+  function handleSelectPoi(poi: Poi) {
+    setSelectedPoiId(poi.id);
+  }
+
+  function handleSelectCluster(cluster: PoiCluster) {
+    const current = latestViewState.current;
+    const { center, zoom } = computeClusterExpansion(cluster, current.zoom, {
+      radiusPx: CLUSTER_RADIUS_PX,
+      minZoom: INITIAL_VIEW_STATE.minZoom,
+      maxZoom: INITIAL_VIEW_STATE.maxZoom,
+    });
+    const [longitude, latitude] = worldToLngLat(center);
+    setInitialViewState({
+      ...current,
+      longitude,
+      latitude,
+      zoom,
+      ...FLY_TO_TRANSITION,
+    });
+  }
+
   const visiblePois = isDefaultPoiFilter(poiFilter)
     ? DEFAULT_VISIBLE_POIS
     : filterPois(POIS, poiFilter);
-  const layers = [createGridLayer(), createPoiLayer(visiblePois)];
+  const layers = [
+    createGridLayer(),
+    createPoiLayer({
+      pois: visiblePois,
+      selectedPoiId,
+      onSelectPoi: handleSelectPoi,
+      onSelectCluster: handleSelectCluster,
+    }),
+  ];
   const is3d = mode === "3d";
 
   return (
@@ -117,6 +167,9 @@ export default function MapCanvas() {
           latestViewState.current = viewState as MapViewState;
           scheduleUrlWrite();
         }}
+        onClick={({ object }) => {
+          if (!object) setSelectedPoiId(null);
+        }}
         layers={layers}
         getTooltip={getPoiTooltip}
         getCursor={getCursor}
@@ -125,7 +178,7 @@ export default function MapCanvas() {
         <PoiFilterPopover
           filter={poiFilter}
           pois={POIS}
-          onChange={setPoiFilter}
+          onChange={changePoiFilter}
         />
         <ViewModeToggle mode={mode} onChange={changeMode} />
       </div>
