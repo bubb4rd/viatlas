@@ -7,6 +7,7 @@ import {
   computeClusterExpansion,
   type PoiCluster,
 } from "@/features/pois/cluster";
+import { PoiDetailSheet } from "@/features/pois/components/poi-detail-sheet";
 import { PoiFilterPopover } from "@/features/pois/components/poi-filter-popover";
 import { DEFAULT_VISIBLE_POIS, POIS } from "@/features/pois/data";
 import {
@@ -167,6 +168,16 @@ export default function MapCanvas() {
     });
   }
 
+  // Read the live camera, since the hash lags it by URL_WRITE_DELAY_MS.
+  function getShareUrl() {
+    const { origin, pathname, search, hash } = window.location;
+    const camera = {
+      viewState: latestViewState.current,
+      mode: modeRef.current,
+    };
+    return `${origin}${pathname}${search}${formatMapHash(hash, { camera, selectedPoiId })}`;
+  }
+
   function flyTo(next: MapViewState) {
     setInitialViewState({ ...next, ...FLY_TO_TRANSITION });
   }
@@ -184,6 +195,7 @@ export default function MapCanvas() {
     }),
   ];
   const is3d = mode === "3d";
+  const selectedPoi = POIS.find((poi) => poi.id === selectedPoiId);
 
   return (
     <>
@@ -217,6 +229,14 @@ export default function MapCanvas() {
           flyTo(resetView(latestViewState.current, modeRef.current))
         }
       />
+      {selectedPoi && (
+        <PoiDetailSheet
+          key={selectedPoi.id}
+          poi={selectedPoi}
+          getShareUrl={getShareUrl}
+          onClose={() => setSelectedPoiId(null)}
+        />
+      )}
     </>
   );
 }

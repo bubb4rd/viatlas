@@ -62,6 +62,17 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
 }
 
+/** The detail sheet renders `source.url` as a link, so allow only http(s). */
+function isHttpUrl(value: unknown): boolean {
+  if (!isNonEmptyString(value)) return false;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "https:" || protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 function isOneOf<T extends string>(
   options: readonly T[],
   value: unknown,
@@ -106,8 +117,8 @@ export function validatePoi(value: unknown): string[] {
     if (!isNonEmptyString(source.ref)) errors.push("source.ref is required");
     if (!isNonEmptyString(source.addedBy))
       errors.push("source.addedBy is required");
-    if (source.url !== undefined && !isNonEmptyString(source.url))
-      errors.push("source.url must be a non-empty string");
+    if (source.url !== undefined && !isHttpUrl(source.url))
+      errors.push("source.url must be an http(s) URL");
     if (source.license !== undefined && !isNonEmptyString(source.license))
       errors.push("source.license must be a non-empty string");
     if (source.kind === "community" && !(source.url && source.license))

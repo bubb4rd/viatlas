@@ -50,6 +50,8 @@ camera settles, and read on load and on `hashchange`. Invalid values are clamped
 POI filters (`#hide=<categories>`, `#speculative=1`) and the selected POI (`#poi=<id>`) follow the
 same read path (`src/features/map/url-pois.ts`) but are written right after the click that changes
 them. Default filters are omitted, and a `#poi` id that is unknown or hidden by the filter is dropped.
+The POI detail sheet's copy-link button builds the same hash from the live camera, since the URL
+lags it by 250 ms, and closing the sheet clears the selection.
 
 ## Layers
 
