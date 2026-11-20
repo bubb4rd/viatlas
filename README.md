@@ -65,7 +65,8 @@ Every map view is a static link stored in the URL hash, so navigating or sharing
 
 - **2D camera:** `#map=zoom/x/y` (e.g. `#map=12.50/1200/-3400`)
 - **3D camera:** `#map=zoom/x/y/pitch/bearing` (e.g. `#map=13.00/0/0/50/-20`)
-- **Deep-link helpers:** [`src/features/map/url-state.ts`](src/features/map/url-state.ts) also parses and serializes `#poi=<id>`, `#hide=<categories>`, and `#speculative=1` while preserving unknown hash keys and clamping out-of-range values. Camera updates debounce `250 ms` after motion settles via `replaceState`.
+- **Filters & selection:** `#hide=<categories>`, `#speculative=1`, and `#poi=<id>` restore the Intel Layers filter and the selected POI on load and on `hashchange`.
+- **Deep-link helpers:** [`src/features/map/url-state.ts`](src/features/map/url-state.ts) parses and serializes every key while preserving unknown hash keys and clamping out-of-range values. Camera updates debounce `250 ms` after motion settles via `replaceState`.
 
 ### Zero-dependency POI search
 
