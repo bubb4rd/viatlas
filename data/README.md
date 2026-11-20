@@ -1,7 +1,9 @@
 # Map data
 
-Reviewed source data. Read [docs/data-and-assets.md](../docs/data-and-assets.md) before adding
-anything: every entry needs a cited source, and invented places are rejected.
+Reviewed source data, licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+([ADR-0008](../docs/adr/0008-data-and-artwork-license.md)). Read
+[docs/data-and-assets.md](../docs/data-and-assets.md) before adding anything: every entry needs a
+cited source, and invented places are rejected.
 
 ## POIs
 
