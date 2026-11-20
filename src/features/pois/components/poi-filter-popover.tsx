@@ -13,14 +13,16 @@ import {
 } from "../filter";
 import { POI_CATEGORIES, type Poi, type PoiCategory } from "../poi";
 
-const CATEGORY_META: Record<PoiCategory, { label: string; dotClass: string }> =
-  {
-    landmark: { label: "Landmarks", dotClass: "bg-poi-landmark" },
-    business: { label: "Businesses", dotClass: "bg-poi-business" },
-    activity: { label: "Activities", dotClass: "bg-poi-activity" },
-    transport: { label: "Transport", dotClass: "bg-poi-transport" },
-    nature: { label: "Nature", dotClass: "bg-poi-nature" },
-  };
+export const CATEGORY_META: Record<
+  PoiCategory,
+  { label: string; dotClass: string }
+> = {
+  landmark: { label: "Landmarks", dotClass: "bg-poi-landmark" },
+  business: { label: "Businesses", dotClass: "bg-poi-business" },
+  activity: { label: "Activities", dotClass: "bg-poi-activity" },
+  transport: { label: "Transport", dotClass: "bg-poi-transport" },
+  nature: { label: "Nature", dotClass: "bg-poi-nature" },
+};
 
 type Props = {
   filter: PoiFilter;

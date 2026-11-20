@@ -93,3 +93,20 @@ test("POI filters and selection round-trip through the URL hash", async ({
   await expect(trigger).toContainText("5/5");
   await expect(speculative).toHaveAttribute("aria-checked", "false");
 });
+
+test("POI list panel toggles from the keyboard", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  const toggle = page.getByRole("button", { name: /poi list/i });
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  // No reviewed POIs ship yet, so the panel shows its empty state.
+  const panel = page.getByRole("region", { name: "Points of interest" });
+  await expect(panel).toContainText(/no pois to show/i);
+
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(toggle).toBeFocused();
+});
