@@ -123,4 +123,30 @@ describe("PoiListPanel", () => {
     expect(within(region).queryByRole("list")).toBeNull();
     expect(region.textContent).toMatch(/no pois to show/i);
   });
+
+  it("moves focus to a neighbour when a filter removes the focused item", () => {
+    const onSelect = vi.fn();
+    const { rerender } = render(
+      <PoiListPanel pois={POIS} selectedPoiId={null} onSelect={onSelect} />,
+    );
+    const region = open(screen.getByRole("button", { name: /poi list/i }));
+    within(region).getByRole("button", { name: "Test Tower" }).focus();
+
+    // Hiding landmarks removes the focused Test Tower (and Test Arch).
+    rerender(
+      <PoiListPanel
+        pois={POIS.filter((poi) => poi.category !== "landmark")}
+        selectedPoiId={null}
+        onSelect={onSelect}
+      />,
+    );
+    expect(document.activeElement).toBe(
+      within(region).getByRole("button", { name: "Test Ferry" }),
+    );
+
+    rerender(
+      <PoiListPanel pois={[]} selectedPoiId={null} onSelect={onSelect} />,
+    );
+    expect(document.activeElement).toBe(region);
+  });
 });

@@ -1,6 +1,13 @@
 "use client";
 
-import { type KeyboardEvent, useId, useRef, useState } from "react";
+import {
+  type FocusEvent,
+  type KeyboardEvent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { POI_CATEGORIES, type Poi } from "../poi";
 import { CATEGORY_META } from "./poi-filter-popover";
 
@@ -12,6 +19,10 @@ type Props = {
 };
 
 const ITEM_SELECTOR = "[data-poi-item]";
+
+function getItems(root: HTMLElement): HTMLButtonElement[] {
+  return Array.from(root.querySelectorAll<HTMLButtonElement>(ITEM_SELECTOR));
+}
 
 /** Where an arrow, Home, or End key moves focus in a list of `count` items. */
 function nextIndex(key: string, current: number, count: number) {
@@ -34,6 +45,8 @@ function nextIndex(key: string, current: number, count: number) {
  * Toggleable DOM list of the filtered POIs: the keyboard and screen-reader
  * path to every marker the canvas draws. Arrow keys, Home, and End move
  * between items; Escape closes the panel and returns focus to the toggle.
+ * If a filter change removes the focused item, focus moves to its neighbour,
+ * or to the panel when none are left.
  */
 export function PoiListPanel({ pois, selectedPoiId, onSelect }: Props) {
   const [open, setOpen] = useState(false);
@@ -42,6 +55,31 @@ export function PoiListPanel({ pois, selectedPoiId, onSelect }: Props) {
   const headingId = `${idPrefix}-heading`;
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
+  // The item that last had focus, so a filter change that removes it can hand
+  // focus to a neighbour instead of dropping it on <body>.
+  const lastFocused = useRef<{ item: HTMLElement; index: number } | null>(null);
+
+  useEffect(() => {
+    const last = lastFocused.current;
+    if (!last || last.item.isConnected) return;
+    lastFocused.current = null;
+    const panel = panelRef.current;
+    if (!panel || document.activeElement !== document.body) return;
+    const items = getItems(panel);
+    (items[Math.min(last.index, items.length - 1)] ?? panel).focus();
+  });
+
+  function handleFocus(event: FocusEvent<HTMLElement>) {
+    const items = getItems(event.currentTarget);
+    const index = items.indexOf(event.target as HTMLButtonElement);
+    const item = items[index];
+    lastFocused.current = item ? { item, index } : null;
+  }
+
+  function handleBlur(event: FocusEvent<HTMLElement>) {
+    const next = event.relatedTarget;
+    if (next && !event.currentTarget.contains(next)) lastFocused.current = null;
+  }
 
   const groups = POI_CATEGORIES.map((category) => ({
     category,
@@ -58,10 +96,7 @@ export function PoiListPanel({ pois, selectedPoiId, onSelect }: Props) {
       toggleRef.current?.focus();
       return;
     }
-    const items = Array.from(
-      panelRef.current?.querySelectorAll<HTMLButtonElement>(ITEM_SELECTOR) ??
-        [],
-    );
+    const items = panelRef.current ? getItems(panelRef.current) : [];
     const current = items.findIndex((item) => item === document.activeElement);
     const target = nextIndex(event.key, current, items.length);
     if (target === null) return;
@@ -90,8 +125,11 @@ export function PoiListPanel({ pois, selectedPoiId, onSelect }: Props) {
           ref={panelRef}
           id={panelId}
           aria-labelledby={headingId}
+          tabIndex={-1}
           onKeyDown={handleKeyDown}
-          className="hud-popover pointer-events-auto flex max-h-[32rem] min-h-0 w-64 flex-col text-text shadow-2xl"
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          className="hud-popover pointer-events-auto flex max-h-[32rem] min-h-0 w-64 flex-col text-text shadow-2xl focus-visible:outline-2 focus-visible:outline-accent-2"
         >
           <h2
             id={headingId}
