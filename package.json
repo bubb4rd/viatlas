@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "tiles": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-tiles.mjs",
     "prepare": "lefthook install"
   },
   "dependencies": {
@@ -43,6 +44,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "jsdom": "^31.0.1",
     "lefthook": "2.2.2",
+    "sharp": "0.35.5",
     "tailwindcss": "4.3.5",
     "typescript": "^7",
     "vitest": "5.1.1"

@@ -33,3 +33,20 @@ cited source, and invented places are rejected.
 
 `pnpm check` validates every file and prints each problem with its file and index.
 See [ADR-0004](../docs/adr/0004-poi-data-and-clustering.md).
+
+## Base map tiles
+
+`pnpm tiles` slices original base map artwork into the WebP tile pyramid from
+[ADR-0007](../docs/adr/0007-base-tiles-and-cdn.md): 512 px tiles, zoom 10–16, XYZ layout.
+
+1. Put the artwork in `data/raw/base-map.png` (gitignored; PNG, WebP, TIFF, or JPEG). It must span
+   `WORLD_BOUNDS` in `src/features/map/world.ts` edge to edge, north up, so its aspect ratio must
+   match (currently 3:4). About 1.2 m per pixel (≈ 20,000 × 26,800 px) is sharp at zoom 16;
+   smaller artwork is upscaled.
+2. Run `pnpm tiles`. Output goes to `public/tiles/v1/{z}/{x}/{y}.webp` plus `manifest.json`.
+   Options: `--source <file>`, `--out <dir>`, `--version v2`, `--quality 1–100` (default 80).
+3. Upload `public/tiles/<version>/` to the CDN as a new immutable prefix. Never commit tiles.
+
+The script fails and deletes the output if any tile is over 100,000 bytes, listing the offenders.
+Simplify those areas of the artwork or lower `--quality`. It also refuses to overwrite an existing
+version and rejects artwork with the wrong aspect ratio.
