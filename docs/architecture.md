@@ -42,6 +42,11 @@ TerrainLayer, …) work unmodified. Convert at the layer boundary and nowhere el
 | URL state (camera, layers, selection)                | Written when an interaction ends, debounced; never per frame |
 | Persisted user state (explore progress, collections) | `localStorage` behind a versioned, validated schema          |
 
+URL state lives in the hash as `key=value` params, so the page stays static and the router never
+re-renders. The camera is `#map=zoom/x/y` in 2D and `#map=zoom/x/y/pitch/bearing` in 3D, with x/y in
+world meters (`src/features/map/url-camera.ts`). It's written with `replaceState` 250 ms after the
+camera settles, and read on load and on `hashchange`. Invalid values are clamped, not rejected.
+
 ## Layers
 
 - One file per layer in `src/features/<feature>/layers/`, exporting `createXLayer(params)`.

@@ -13,3 +13,18 @@ test("map renders and switches camera mode", async ({ page }) => {
 
   expect(errors).toEqual([]);
 });
+
+test("camera survives a reload through the URL hash", async ({ page }) => {
+  await page.goto("/#map=13.00/1500/-2500");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "3D" }).click();
+  // Written once the mode transition settles: zoom/x/y/pitch/bearing.
+  await expect(page).toHaveURL(/#map=13\.00\/1500\/-2500\/50\/-20$/);
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "3D" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});

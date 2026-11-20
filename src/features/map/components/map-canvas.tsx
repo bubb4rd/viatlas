@@ -2,7 +2,7 @@
 
 import { MapView, type MapViewState } from "@deck.gl/core";
 import DeckGL from "@deck.gl/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createPoiLayer,
   getPoiTooltip,
@@ -14,9 +14,13 @@ import {
   type ViewMode,
 } from "../camera";
 import { createGridLayer } from "../layers/grid-layer";
+import { formatCameraHash, parseCameraHash } from "../url-camera";
 import { ViewModeToggle } from "./view-mode-toggle";
 
 const VIEW = new MapView({ repeat: false });
+
+/** Quiet time after the last camera frame before the URL is rewritten. */
+const URL_WRITE_DELAY_MS = 250;
 
 function getCursor({
   isDragging,
@@ -35,14 +39,51 @@ function getCursor({
  * The camera is uncontrolled. Per-frame view state goes into a ref, never React
  * state, so panning never re-renders the tree. Mode changes reseed
  * `initialViewState` from the latest camera with a transition.
+ *
+ * The camera round-trips through the URL hash: read on load and on
+ * `hashchange`, written with `replaceState` once the camera settles.
  */
 export default function MapCanvas() {
-  const [mode, setMode] = useState<ViewMode>("2d");
-  const [initialViewState, setInitialViewState] =
-    useState<MapViewState>(INITIAL_VIEW_STATE);
-  const latestViewState = useRef<MapViewState>(INITIAL_VIEW_STATE);
+  // Client-only component, so `window` exists on first render.
+  const [fromUrl] = useState(() => parseCameraHash(window.location.hash));
+  const [mode, setMode] = useState<ViewMode>(fromUrl?.mode ?? "2d");
+  const [initialViewState, setInitialViewState] = useState<MapViewState>(
+    fromUrl?.viewState ?? INITIAL_VIEW_STATE,
+  );
+  const latestViewState = useRef<MapViewState>(initialViewState);
+  const modeRef = useRef<ViewMode>(mode);
+  const urlWriteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  function scheduleUrlWrite() {
+    clearTimeout(urlWriteTimer.current);
+    urlWriteTimer.current = setTimeout(() => {
+      const { hash } = window.location;
+      const next = formatCameraHash(
+        hash,
+        latestViewState.current,
+        modeRef.current,
+      );
+      if (next !== hash) window.history.replaceState(null, "", next);
+    }, URL_WRITE_DELAY_MS);
+  }
+
+  useEffect(() => {
+    function onHashChange() {
+      const next = parseCameraHash(window.location.hash);
+      if (!next) return;
+      modeRef.current = next.mode;
+      setMode(next.mode);
+      setInitialViewState(next.viewState);
+    }
+    window.addEventListener("hashchange", onHashChange);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      clearTimeout(urlWriteTimer.current);
+    };
+  }, []);
 
   function changeMode(next: ViewMode) {
+    modeRef.current = next;
     setMode(next);
     setInitialViewState({
       ...latestViewState.current,
@@ -62,6 +103,7 @@ export default function MapCanvas() {
         controller={{ dragRotate: is3d, touchRotate: is3d, keyboard: true }}
         onViewStateChange={({ viewState }) => {
           latestViewState.current = viewState as MapViewState;
+          scheduleUrlWrite();
         }}
         layers={layers}
         getTooltip={getPoiTooltip}

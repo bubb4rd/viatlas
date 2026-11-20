@@ -8,9 +8,6 @@ contributing any map data, imagery, or names.
 - Files extracted or datamined from any GTA game, GTA VI included once it ships: textures, models,
   map images, audio, scripts, or text tables.
 - Leaked material of any kind, including leaked footage and internal builds.
-- Official artwork, logos, key art, screenshots, or trailer frames used as images in the app.
-- Data copied from other fan maps or wikis without a compatible license and attribution.
-- AI-generated imitations of official art, characters, or logos.
 - Invented locations or names presented as fact.
 
 ## Accepted
