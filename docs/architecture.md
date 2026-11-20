@@ -49,7 +49,10 @@ TerrainLayer, …) work unmodified. Convert at the layer boundary and nowhere el
 - Static data is built once at module scope. Layer `id`s are stable. Accessors that depend on
   changing values use `updateTriggers`.
 
-## Data pipeline (planned)
+## Data pipeline
+
+Today: POIs live in `data/pois/<category>.json`, are validated by `pnpm check`, and are bundled into
+the map chunk ([ADR-0004](adr/0004-poi-data-and-clustering.md)). Planned as data grows:
 
 ```
 data/            reviewed source data (world-meter GeoJSON/JSON + provenance)
