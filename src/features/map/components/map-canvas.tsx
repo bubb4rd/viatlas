@@ -4,6 +4,10 @@ import { MapView, type MapViewState } from "@deck.gl/core";
 import DeckGL from "@deck.gl/react";
 import { useRef, useState } from "react";
 import {
+  createPoiLayer,
+  getPoiTooltip,
+} from "@/features/pois/layers/poi-layer";
+import {
   INITIAL_VIEW_STATE,
   MODE_POSE,
   MODE_TRANSITION,
@@ -13,6 +17,17 @@ import { createGridLayer } from "../layers/grid-layer";
 import { ViewModeToggle } from "./view-mode-toggle";
 
 const VIEW = new MapView({ repeat: false });
+
+function getCursor({
+  isDragging,
+  isHovering,
+}: {
+  isDragging: boolean;
+  isHovering: boolean;
+}) {
+  if (isDragging) return "grabbing";
+  return isHovering ? "pointer" : "grab";
+}
 
 /**
  * Root map renderer. Client-only: loaded via `next/dynamic` with `ssr: false`.
@@ -36,7 +51,7 @@ export default function MapCanvas() {
     });
   }
 
-  const layers = [createGridLayer()];
+  const layers = [createGridLayer(), createPoiLayer()];
   const is3d = mode === "3d";
 
   return (
@@ -49,6 +64,8 @@ export default function MapCanvas() {
           latestViewState.current = viewState as MapViewState;
         }}
         layers={layers}
+        getTooltip={getPoiTooltip}
+        getCursor={getCursor}
       />
       <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-end p-4">
         <ViewModeToggle mode={mode} onChange={changeMode} />

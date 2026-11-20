@@ -12,7 +12,7 @@ export type WorldPoint = [x: number, y: number];
 /** Synthetic geographic position fed to deck.gl. */
 export type LngLat = [lng: number, lat: number];
 
-const EARTH_RADIUS_M = 6_378_137;
+export const EARTH_RADIUS_M = 6_378_137;
 const RAD_TO_DEG = 180 / Math.PI;
 const DEG_TO_RAD = Math.PI / 180;
 
