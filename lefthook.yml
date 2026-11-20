@@ -1,6 +1,9 @@
 # Git hooks. Installed automatically by `pnpm install` (the `prepare` script).
 # https://lefthook.dev/configuration/
 
+# Use the .nvmrc Node even when git runs from a GUI client.
+rc: .lefthookrc
+
 pre-commit:
   parallel: true
   jobs:

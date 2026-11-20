@@ -1,0 +1,8 @@
+# Sourced by lefthook before every hook command.
+# GUI git clients don't load your shell profile, so they can run hooks on the
+# wrong Node. If nvm is installed, switch to the version in .nvmrc.
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh" --no-use
+  nvm use --silent >/dev/null 2>&1 || true
+fi
