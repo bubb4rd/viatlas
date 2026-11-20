@@ -9,6 +9,7 @@
 | Basemap       | None. Our own tiles through `TileLayer`                   | [ADR-0001](adr/0001-deckgl-without-basemap.md)  |
 | Coordinates   | World meters → synthetic Web Mercator                     | [ADR-0002](adr/0002-world-coordinates.md)       |
 | Styling       | Tailwind v4 + CSS tokens in `globals.css`                 |                                                 |
+| UI primitives | Base UI (`@base-ui/react`)                                | [ADR-0005](adr/0005-base-ui-primitives.md)      |
 | Tooling       | pnpm, Biome, Vitest, Playwright, lefthook, GitHub Actions | [ADR-0003](adr/0003-toolchain.md)               |
 
 ## Render pipeline

@@ -28,3 +28,22 @@ test("camera survives a reload through the URL hash", async ({ page }) => {
     "true",
   );
 });
+
+test("intel layers popover opens, toggles filters, and closes on Escape", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  const trigger = page.getByRole("button", { name: /layers/i });
+  await trigger.click();
+
+  const landmarks = page.getByRole("switch", { name: /landmarks/i });
+  await expect(landmarks).toHaveAttribute("aria-checked", "true");
+  await landmarks.click();
+  await expect(landmarks).toHaveAttribute("aria-checked", "false");
+  await expect(trigger).toContainText("4/5");
+
+  await page.keyboard.press("Escape");
+  await expect(landmarks).toBeHidden();
+});
