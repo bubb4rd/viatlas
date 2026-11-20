@@ -13,6 +13,11 @@
   --text-dim: #8a9aa6;
   --accent: #ff5f8f; /* Leonida sunset */
   --accent-2: #3ad6c5; /* Gulf teal */
+  --poi-landmark: #ff5f8f;
+  --poi-business: #ffb84d;
+  --poi-activity: #a78bfa;
+  --poi-transport: #60a5fa;
+  --poi-nature: #4ade80;
 }
 
 @theme inline {
@@ -24,6 +29,11 @@
   --color-text-dim: var(--text-dim);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-poi-landmark: var(--poi-landmark);
+  --color-poi-business: var(--poi-business);
+  --color-poi-activity: var(--poi-activity);
+  --color-poi-transport: var(--poi-transport);
+  --color-poi-nature: var(--poi-nature);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -66,13 +76,56 @@ body {
     color: var(--text);
   }
 
-  .hud-button[aria-pressed="true"] {
+  .hud-button[aria-pressed="true"],
+  .hud-button[data-popup-open] {
     color: var(--bg);
     background: var(--accent);
   }
 
-  .hud-button:focus-visible {
+  .hud-button:focus-visible,
+  .hud-switch:focus-visible {
     outline: 2px solid var(--accent-2);
     outline-offset: 2px;
+  }
+
+  .hud-popover {
+    background: var(--surface-strong);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(16px);
+  }
+
+  .hud-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 2.25rem;
+    height: 1.25rem;
+    padding: 0.125rem;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    cursor: pointer;
+    transition:
+      background-color 120ms,
+      border-color 120ms;
+  }
+
+  .hud-switch[data-checked] {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .hud-switch-thumb {
+    display: block;
+    width: 0.875rem;
+    height: 0.875rem;
+    background: var(--text-dim);
+    transition:
+      transform 120ms,
+      background-color 120ms;
+  }
+
+  .hud-switch[data-checked] .hud-switch-thumb {
+    background: var(--bg);
+    transform: translateX(1rem);
   }
 }

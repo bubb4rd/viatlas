@@ -15,3 +15,4 @@ new one and update the old one's status line.
 | [0002](0002-world-coordinates.md)       | World meters on a synthetic Web Mercator extent | Accepted |
 | [0003](0003-toolchain.md)               | pnpm, Biome, Vitest, Playwright, lefthook       | Accepted |
 | [0004](0004-poi-data-and-clustering.md) | POI data as validated JSON, clustered in-house  | Accepted |
+| [0005](0005-base-ui-primitives.md)      | Base UI for interactive HUD primitives          | Accepted |

@@ -96,8 +96,8 @@ class PoiLayer extends CompositeLayer<PoiLayerProps> {
   }
 }
 
-export function createPoiLayer() {
-  return new PoiLayer({ id: "pois", pois: DEFAULT_VISIBLE_POIS });
+export function createPoiLayer(pois: readonly Poi[] = DEFAULT_VISIBLE_POIS) {
+  return new PoiLayer({ id: "pois", pois });
 }
 
 /** Hover text for `DeckGL.getTooltip`; null for anything that isn't a POI item. */
