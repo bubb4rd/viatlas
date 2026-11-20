@@ -60,6 +60,15 @@ describe("validatePoi", () => {
     ).toEqual([]);
   });
 
+  it.each(["javascript:alert(1)", "data:text/html,hi", "example.com/map", " "])(
+    "rejects a source.url of %j",
+    (url) => {
+      expect(
+        validatePoi({ ...valid, source: { ...valid.source, url } }),
+      ).toEqual(["source.url must be an http(s) URL"]);
+    },
+  );
+
   it("rejects non-objects", () => {
     expect(validatePoi(null)).toEqual(["entry is not an object"]);
   });

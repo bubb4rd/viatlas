@@ -29,6 +29,7 @@ cited source, and invented places are rejected.
 - `category`: must match the file it's in.
 - `position`: `[x, y]` world meters (+x east, +y north), inside `WORLD_BOUNDS`.
 - `source.kind` of `community` also needs `source.url` and `source.license`.
+- `source.url`, when present, must be an `http(s)` URL.
 - `confidence: "speculative"` entries are hidden by default.
 
 `pnpm check` validates every file and prints each problem with its file and index.
