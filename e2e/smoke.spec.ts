@@ -161,8 +161,18 @@ test("search flies to and selects the picked POI", async ({ page }) => {
   await page.keyboard.type("search fixture");
   await page.getByRole("option", { name: poi.name }).click();
 
-  await expect(page.getByRole("dialog", { name: poi.name })).toBeVisible();
+  const sheet = page.getByRole("dialog", { name: poi.name });
+  await expect(sheet).toBeVisible();
   await expect(page).toHaveURL(
     /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
   );
+
+  // Escape clears the search without also closing the sheet it opened.
+  const search = page.getByRole("combobox", { name: "Search POIs" });
+  await search.focus();
+  await expect(search).toHaveValue(poi.name);
+  await page.keyboard.press("Escape");
+  await expect(search).toHaveValue("");
+  await expect(sheet).toBeVisible();
+  await expect(page).toHaveURL(/&poi=poi-e2e-search-fixture$/);
 });

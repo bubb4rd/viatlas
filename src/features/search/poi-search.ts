@@ -15,6 +15,8 @@ export type PoiSearchField = "name" | "alias" | "category";
 export type PoiSearchIndexOptions = {
   /** Optional alternate names keyed by `poi.id`. */
   aliasesById?: Readonly<Record<string, readonly string[]>>;
+  /** Display labels keyed by category, matched alongside the category id. */
+  categoryLabels?: Readonly<Partial<Record<PoiCategory, string>>>;
 };
 
 export type PoiSearchOptions = {
@@ -36,7 +38,7 @@ type IndexedPoi = {
   poi: Poi;
   nameNorm: string;
   nameWords: readonly string[];
-  categoryNorm: string;
+  categoryNorms: readonly string[];
   aliasesNorm: readonly string[];
   aliasWords: readonly (readonly string[])[];
 };
@@ -76,7 +78,10 @@ export function createPoiSearchIndex(
   const aliasesById = options?.aliasesById;
   const entries: IndexedPoi[] = pois.map((poi) => {
     const nameNorm = normalizeSearchText(poi.name);
-    const categoryNorm = normalizeSearchText(poi.category);
+    const categoryLabel = options?.categoryLabels?.[poi.category];
+    const categoryNorms = [poi.category, categoryLabel ?? ""]
+      .map(normalizeSearchText)
+      .filter((norm, i, all) => norm !== "" && all.indexOf(norm) === i);
     const rawAliases = aliasesById?.[poi.id] ?? [];
     const aliasesNorm: string[] = [];
     const aliasWords: string[][] = [];
@@ -92,7 +97,7 @@ export function createPoiSearchIndex(
       poi,
       nameNorm,
       nameWords: splitWords(nameNorm),
-      categoryNorm,
+      categoryNorms,
       aliasesNorm,
       aliasWords,
     };
@@ -168,14 +173,16 @@ function scoreTerm(entry: IndexedPoi, term: string): MatchScore | null {
     }
   }
 
-  const categoryScore = scoreStringMatch(
-    entry.categoryNorm,
-    [entry.categoryNorm],
-    term,
-    CATEGORY_WEIGHTS,
-  );
-  if (categoryScore > 0 && (!best || categoryScore > best.score)) {
-    best = { score: categoryScore, field: "category" };
+  for (const category of entry.categoryNorms) {
+    const categoryScore = scoreStringMatch(
+      category,
+      splitWords(category),
+      term,
+      CATEGORY_WEIGHTS,
+    );
+    if (categoryScore > 0 && (!best || categoryScore > best.score)) {
+      best = { score: categoryScore, field: "category" };
+    }
   }
 
   return best;

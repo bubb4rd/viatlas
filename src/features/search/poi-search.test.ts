@@ -97,6 +97,21 @@ describe("searchPois", () => {
     ]);
   });
 
+  it("matches category display labels when the index has them", () => {
+    expect(searchPois(INDEX, "landmarks")).toEqual([]);
+
+    const labelled = createPoiSearchIndex(SAMPLE_POIS, {
+      categoryLabels: { landmark: "Landmarks", business: "Businesses" },
+    });
+    expect(searchPois(labelled, "landmarks").map((r) => r.poi.id)).toEqual([
+      "poi-vice-pier",
+    ]);
+    expect(searchPois(labelled, "busi").map((r) => r.poi.id)).toEqual([
+      "poi-device-repair",
+      "poi-cafe-leonida",
+    ]);
+  });
+
   it("matches aliases and records alias as matchedField", () => {
     const results = searchPois(INDEX, "boardwalk");
     expect(results.map((r) => r.poi.id)).toEqual(["poi-vice-pier"]);

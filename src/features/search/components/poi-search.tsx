@@ -4,7 +4,7 @@ import { Autocomplete } from "@base-ui/react/autocomplete";
 import { useEffect, useRef, useState } from "react";
 import { CATEGORY_META } from "@/features/pois/components/poi-filter-popover";
 import type { PoiFilter } from "@/features/pois/filter";
-import type { Poi } from "@/features/pois/poi";
+import type { Poi, PoiCategory } from "@/features/pois/poi";
 import { createPoiSearchIndex, searchPois } from "../poi-search";
 
 type Props = {
@@ -15,6 +15,14 @@ type Props = {
 };
 
 const RESULT_LIMIT = 8;
+
+/** The labels shown beside each result, so typing what you see matches. */
+const CATEGORY_LABELS = Object.fromEntries(
+  Object.entries(CATEGORY_META).map(([category, meta]) => [
+    category,
+    meta.label,
+  ]),
+) as Record<PoiCategory, string>;
 
 /** True when a keystroke there is typing, so `/` must not steal focus. */
 function isEditable(target: EventTarget | null): boolean {
@@ -33,7 +41,7 @@ function isEditable(target: EventTarget | null): boolean {
 export function PoiSearch({ pois, filter, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const index = createPoiSearchIndex(pois);
+  const index = createPoiSearchIndex(pois, { categoryLabels: CATEGORY_LABELS });
   const results = searchPois(index, query, {
     categories: filter.categories,
     showSpeculative: filter.showSpeculative,
@@ -67,6 +75,15 @@ export function PoiSearch({ pois, filter, onSelect }: Props) {
           aria-label="Search POIs"
           aria-keyshortcuts="/"
           placeholder="Search POIs"
+          onKeyDown={(event) => {
+            // An Escape that clears the search must not also close the detail
+            // sheet, whose dismiss listens on `document`. Next.js roots React
+            // at `document` too, so only stopping the remaining listeners on
+            // that node (registered after React's) keeps it from the sheet.
+            if (event.key === "Escape" && query !== "") {
+              event.nativeEvent.stopImmediatePropagation();
+            }
+          }}
           className="min-h-11 w-full min-w-0 bg-transparent pr-8 pl-3 text-sm text-text placeholder:text-text-dim focus-visible:outline-2 focus-visible:outline-accent-2 any-pointer-coarse:text-base"
         />
         {query === "" && (
