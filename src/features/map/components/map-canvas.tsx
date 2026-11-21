@@ -38,6 +38,7 @@ import {
 } from "../camera";
 import { createBaseTileLayer } from "../layers/base-tile-layer";
 import { createGridLayer } from "../layers/grid-layer";
+import { MotionAwareMapController } from "../motion-aware-map-controller";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
 import { parsePoiHash } from "../url-pois";
 import { formatMapHash } from "../url-state";
@@ -248,6 +249,7 @@ export default function MapCanvas() {
         views={VIEW}
         initialViewState={initialViewState}
         controller={{
+          type: MotionAwareMapController,
           dragRotate: is3d,
           touchRotate: is3d,
           keyboard: true,
