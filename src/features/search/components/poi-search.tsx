@@ -4,7 +4,7 @@ import { Autocomplete } from "@base-ui/react/autocomplete";
 import { useEffect, useRef, useState } from "react";
 import { CATEGORY_META } from "@/features/pois/components/poi-filter-popover";
 import type { PoiFilter } from "@/features/pois/filter";
-import type { Poi, PoiCategory } from "@/features/pois/poi";
+import type { Poi } from "@/features/pois/poi";
 import { createPoiSearchIndex, searchPois } from "../poi-search";
 
 type Props = {
@@ -15,14 +15,6 @@ type Props = {
 };
 
 const RESULT_LIMIT = 8;
-
-/** The labels shown beside each result, so typing what you see matches. */
-const CATEGORY_LABELS = Object.fromEntries(
-  Object.entries(CATEGORY_META).map(([category, meta]) => [
-    category,
-    meta.label,
-  ]),
-) as Record<PoiCategory, string>;
 
 /** True when a keystroke there is typing, so `/` must not steal focus. */
 function isEditable(target: EventTarget | null): boolean {
@@ -41,7 +33,10 @@ function isEditable(target: EventTarget | null): boolean {
 export function PoiSearch({ pois, filter, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const index = createPoiSearchIndex(pois, { categoryLabels: CATEGORY_LABELS });
+  const index = createPoiSearchIndex(pois, {
+    // Match the label shown beside each result, so typing what you see works.
+    getCategoryLabel: (category) => CATEGORY_META[category].label,
+  });
   const results = searchPois(index, query, {
     categories: filter.categories,
     showSpeculative: filter.showSpeculative,

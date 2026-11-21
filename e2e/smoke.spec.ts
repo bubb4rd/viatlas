@@ -167,9 +167,12 @@ test("search flies to and selects the picked POI", async ({ page }) => {
     /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
   );
 
-  // Escape clears the search without also closing the sheet it opened.
+  // Picking moves focus into the sheet. Going back to the search, which still
+  // holds the pick, Escape clears it without also closing the sheet.
   const search = page.getByRole("combobox", { name: "Search POIs" });
-  await search.focus();
+  await expect(search).not.toBeFocused();
+  await page.keyboard.press("/");
+  await expect(search).toBeFocused();
   await expect(search).toHaveValue(poi.name);
   await page.keyboard.press("Escape");
   await expect(search).toHaveValue("");

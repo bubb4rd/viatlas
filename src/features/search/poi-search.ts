@@ -15,8 +15,8 @@ export type PoiSearchField = "name" | "alias" | "category";
 export type PoiSearchIndexOptions = {
   /** Optional alternate names keyed by `poi.id`. */
   aliasesById?: Readonly<Record<string, readonly string[]>>;
-  /** Display labels keyed by category, matched alongside the category id. */
-  categoryLabels?: Readonly<Partial<Record<PoiCategory, string>>>;
+  /** Display label for a category, matched alongside the category id. */
+  getCategoryLabel?: (category: PoiCategory) => string;
 };
 
 export type PoiSearchOptions = {
@@ -39,6 +39,7 @@ type IndexedPoi = {
   nameNorm: string;
   nameWords: readonly string[];
   categoryNorms: readonly string[];
+  categoryWords: readonly (readonly string[])[];
   aliasesNorm: readonly string[];
   aliasWords: readonly (readonly string[])[];
 };
@@ -78,8 +79,8 @@ export function createPoiSearchIndex(
   const aliasesById = options?.aliasesById;
   const entries: IndexedPoi[] = pois.map((poi) => {
     const nameNorm = normalizeSearchText(poi.name);
-    const categoryLabel = options?.categoryLabels?.[poi.category];
-    const categoryNorms = [poi.category, categoryLabel ?? ""]
+    const categoryLabel = options?.getCategoryLabel?.(poi.category) ?? "";
+    const categoryNorms = [poi.category, categoryLabel]
       .map(normalizeSearchText)
       .filter((norm, i, all) => norm !== "" && all.indexOf(norm) === i);
     const rawAliases = aliasesById?.[poi.id] ?? [];
@@ -98,6 +99,7 @@ export function createPoiSearchIndex(
       nameNorm,
       nameWords: splitWords(nameNorm),
       categoryNorms,
+      categoryWords: categoryNorms.map(splitWords),
       aliasesNorm,
       aliasWords,
     };
@@ -173,10 +175,13 @@ function scoreTerm(entry: IndexedPoi, term: string): MatchScore | null {
     }
   }
 
-  for (const category of entry.categoryNorms) {
+  for (let i = 0; i < entry.categoryNorms.length; i += 1) {
+    const category = entry.categoryNorms[i];
+    const words = entry.categoryWords[i];
+    if (!category || !words) continue;
     const categoryScore = scoreStringMatch(
       category,
-      splitWords(category),
+      words,
       term,
       CATEGORY_WEIGHTS,
     );
