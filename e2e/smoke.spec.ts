@@ -1,20 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-
-type PoiRecord = {
-  id: string;
-  name: string;
-  position: [number, number];
-  confidence: string;
-};
-
-// Reviewed data from data/pois/, so the journey runs once real POIs ship.
-const firstShownPoi = readdirSync("data/pois")
-  .flatMap(
-    (file) =>
-      JSON.parse(readFileSync(`data/pois/${file}`, "utf8")) as PoiRecord[],
-  )
-  .find((poi) => poi.confidence !== "speculative");
 
 test("map renders and switches camera mode", async ({ page }) => {
   const errors: string[] = [];
@@ -145,18 +129,40 @@ test("search focuses on / and explains an empty result", async ({ page }) => {
 });
 
 test("search flies to and selects the picked POI", async ({ page }) => {
-  test.skip(!firstShownPoi, "No reviewed POIs ship yet");
-  if (!firstShownPoi) return;
-  const { id, name, position } = firstShownPoi;
+  // Fixture, not real data: no reviewed POIs ship yet (see src/features/pois/data.ts).
+  const poi = {
+    id: "poi-e2e-search-fixture",
+    name: "E2E Search Fixture",
+    category: "landmark",
+    position: [1500, -2500],
+    source: {
+      kind: "trailer",
+      ref: "E2E fixture, not real data",
+      addedBy: "e2e",
+    },
+    confidence: "likely",
+  };
+  await page.addInitScript((landmark) => {
+    Object.assign(globalThis, {
+      __VIATLAS_E2E_POIS__: {
+        landmark: [landmark],
+        business: [],
+        activity: [],
+        transport: [],
+        nature: [],
+      },
+    });
+  }, poi);
 
   await page.goto("/#map=11.50/0/0");
   await expect(page.locator("canvas").first()).toBeVisible();
 
   await page.keyboard.press("/");
-  await page.keyboard.type(name);
-  await page.getByRole("option", { name }).first().click();
+  await page.keyboard.type("search fixture");
+  await page.getByRole("option", { name: poi.name }).click();
 
-  await expect(page.getByRole("dialog", { name })).toBeVisible();
-  const [x, y] = position.map(Math.round);
-  await expect(page).toHaveURL(new RegExp(`#map=15\\.00/${x}/${y}&poi=${id}$`));
+  await expect(page.getByRole("dialog", { name: poi.name })).toBeVisible();
+  await expect(page).toHaveURL(
+    /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
+  );
 });
