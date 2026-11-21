@@ -5,8 +5,10 @@ type Props = {
 
 /** Non-blocking notice that base map tiles failed; the grid and POIs keep working. */
 export function TileErrorBanner({ onRetry, onDismiss }: Props) {
+  // From `sm` up the POI detail sheet fills the right 21rem below the top bar,
+  // so center in the space left of it instead of underneath it.
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-20 flex justify-center px-4">
+    <div className="pointer-events-none absolute inset-x-0 top-20 flex justify-center px-4 sm:pr-88">
       <div
         role="alert"
         className="hud-panel pointer-events-auto flex items-center gap-3 py-1 pl-4 pr-1"

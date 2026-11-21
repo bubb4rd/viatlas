@@ -93,8 +93,11 @@ export default function MapCanvas() {
   const modeRef = useRef<ViewMode>(mode);
   const urlWriteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pickingWarmUp = usePickingWarmUp();
-  // Set once per failure burst (React bails out on the same value), not per frame.
-  const [tileError, setTileError] = useState(false);
+  // Changes once per failure burst (React bails out on the same value), not per
+  // frame. Dismissed stays dismissed until Retry or a reload.
+  const [tileNotice, setTileNotice] = useState<
+    "hidden" | "shown" | "dismissed"
+  >("hidden");
   const [tileRetryKey, setTileRetryKey] = useState(0);
 
   function scheduleUrlWrite() {
@@ -210,7 +213,9 @@ export default function MapCanvas() {
           retryKey: tileRetryKey,
           onTileError: (error) => {
             console.error("Base map tile failed to load", error);
-            setTileError(true);
+            setTileNotice((notice) =>
+              notice === "dismissed" ? notice : "shown",
+            );
           },
         })
       : null,
@@ -257,13 +262,13 @@ export default function MapCanvas() {
         selectedPoiId={selectedPoiId}
         onSelect={handleListSelect}
       />
-      {tileError && (
+      {tileNotice === "shown" && (
         <TileErrorBanner
           onRetry={() => {
-            setTileError(false);
+            setTileNotice("hidden");
             setTileRetryKey((key) => key + 1);
           }}
-          onDismiss={() => setTileError(false)}
+          onDismiss={() => setTileNotice("dismissed")}
         />
       )}
       <MapControls
