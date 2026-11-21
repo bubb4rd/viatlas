@@ -38,7 +38,7 @@ test("HUD controls fit a 375 px phone with 44 px targets", async ({ page }) => {
     if (!(await control.isVisible())) continue;
     const name =
       (await control.getAttribute("aria-label")) ??
-      (await control.innerText()).trim();
+      ((await control.textContent()) ?? "").trim();
     if (/next\.js/i.test(name)) continue;
     const box = await control.boundingBox();
     if (box) boxes.push({ name, ...box });
