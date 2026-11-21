@@ -37,6 +37,7 @@ import { createGridLayer } from "../layers/grid-layer";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
 import { parsePoiHash } from "../url-pois";
 import { formatMapHash } from "../url-state";
+import { usePickingWarmUp } from "../use-picking-warm-up";
 import { worldToLngLat } from "../world";
 import { MapControls } from "./map-controls";
 import { ViewModeToggle } from "./view-mode-toggle";
@@ -85,6 +86,7 @@ export default function MapCanvas() {
   const latestViewState = useRef<MapViewState>(initialViewState);
   const modeRef = useRef<ViewMode>(mode);
   const urlWriteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pickingWarmUp = usePickingWarmUp();
 
   function scheduleUrlWrite() {
     clearTimeout(urlWriteTimer.current);
@@ -207,6 +209,7 @@ export default function MapCanvas() {
   return (
     <>
       <DeckGL
+        {...pickingWarmUp}
         views={VIEW}
         initialViewState={initialViewState}
         controller={{ dragRotate: is3d, touchRotate: is3d, keyboard: true }}
