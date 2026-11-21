@@ -15,6 +15,8 @@ export type PoiSearchField = "name" | "alias" | "category";
 export type PoiSearchIndexOptions = {
   /** Optional alternate names keyed by `poi.id`. */
   aliasesById?: Readonly<Record<string, readonly string[]>>;
+  /** Display label for a category, matched alongside the category id. */
+  getCategoryLabel?: (category: PoiCategory) => string;
 };
 
 export type PoiSearchOptions = {
@@ -36,7 +38,8 @@ type IndexedPoi = {
   poi: Poi;
   nameNorm: string;
   nameWords: readonly string[];
-  categoryNorm: string;
+  categoryNorms: readonly string[];
+  categoryWords: readonly (readonly string[])[];
   aliasesNorm: readonly string[];
   aliasWords: readonly (readonly string[])[];
 };
@@ -76,7 +79,10 @@ export function createPoiSearchIndex(
   const aliasesById = options?.aliasesById;
   const entries: IndexedPoi[] = pois.map((poi) => {
     const nameNorm = normalizeSearchText(poi.name);
-    const categoryNorm = normalizeSearchText(poi.category);
+    const categoryLabel = options?.getCategoryLabel?.(poi.category) ?? "";
+    const categoryNorms = [poi.category, categoryLabel]
+      .map(normalizeSearchText)
+      .filter((norm, i, all) => norm !== "" && all.indexOf(norm) === i);
     const rawAliases = aliasesById?.[poi.id] ?? [];
     const aliasesNorm: string[] = [];
     const aliasWords: string[][] = [];
@@ -92,7 +98,8 @@ export function createPoiSearchIndex(
       poi,
       nameNorm,
       nameWords: splitWords(nameNorm),
-      categoryNorm,
+      categoryNorms,
+      categoryWords: categoryNorms.map(splitWords),
       aliasesNorm,
       aliasWords,
     };
@@ -168,14 +175,19 @@ function scoreTerm(entry: IndexedPoi, term: string): MatchScore | null {
     }
   }
 
-  const categoryScore = scoreStringMatch(
-    entry.categoryNorm,
-    [entry.categoryNorm],
-    term,
-    CATEGORY_WEIGHTS,
-  );
-  if (categoryScore > 0 && (!best || categoryScore > best.score)) {
-    best = { score: categoryScore, field: "category" };
+  for (let i = 0; i < entry.categoryNorms.length; i += 1) {
+    const category = entry.categoryNorms[i];
+    const words = entry.categoryWords[i];
+    if (!category || !words) continue;
+    const categoryScore = scoreStringMatch(
+      category,
+      words,
+      term,
+      CATEGORY_WEIGHTS,
+    );
+    if (categoryScore > 0 && (!best || categoryScore > best.score)) {
+      best = { score: categoryScore, field: "category" };
+    }
   }
 
   return best;

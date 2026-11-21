@@ -33,7 +33,10 @@ function isEditable(target: EventTarget | null): boolean {
 export function PoiSearch({ pois, filter, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const index = createPoiSearchIndex(pois);
+  const index = createPoiSearchIndex(pois, {
+    // Match the label shown beside each result, so typing what you see works.
+    getCategoryLabel: (category) => CATEGORY_META[category].label,
+  });
   const results = searchPois(index, query, {
     categories: filter.categories,
     showSpeculative: filter.showSpeculative,
@@ -67,6 +70,15 @@ export function PoiSearch({ pois, filter, onSelect }: Props) {
           aria-label="Search POIs"
           aria-keyshortcuts="/"
           placeholder="Search POIs"
+          onKeyDown={(event) => {
+            // An Escape that clears the search must not also close the detail
+            // sheet, whose dismiss listens on `document`. Next.js roots React
+            // at `document` too, so only stopping the remaining listeners on
+            // that node (registered after React's) keeps it from the sheet.
+            if (event.key === "Escape" && query !== "") {
+              event.nativeEvent.stopImmediatePropagation();
+            }
+          }}
           className="min-h-11 w-full min-w-0 bg-transparent pr-8 pl-3 text-sm text-text placeholder:text-text-dim focus-visible:outline-2 focus-visible:outline-accent-2 any-pointer-coarse:text-base"
         />
         {query === "" && (

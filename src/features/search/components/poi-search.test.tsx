@@ -95,6 +95,13 @@ describe("PoiSearch", () => {
     expect(onSelect).toHaveBeenCalledWith(POIS[0]);
   });
 
+  it("matches the category label shown beside each result", () => {
+    const { input } = renderSearch();
+    expect(optionNames(type(input, "landmarks"))).toEqual([
+      "Test TowerLandmarks",
+    ]);
+  });
+
   it("says so when nothing matches", () => {
     const { input } = renderSearch();
     expect(optionNames(type(input, "zzz"))).toEqual([]);

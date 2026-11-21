@@ -161,10 +161,23 @@ test("search flies to and selects the picked POI", async ({ page }) => {
   await page.keyboard.type("search fixture");
   await page.getByRole("option", { name: poi.name }).click();
 
-  await expect(page.getByRole("dialog", { name: poi.name })).toBeVisible();
+  const sheet = page.getByRole("dialog", { name: poi.name });
+  await expect(sheet).toBeVisible();
   await expect(page).toHaveURL(
     /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
   );
+
+  // Picking moves focus into the sheet. Going back to the search, which still
+  // holds the pick, Escape clears it without also closing the sheet.
+  const search = page.getByRole("combobox", { name: "Search POIs" });
+  await expect(search).not.toBeFocused();
+  await page.keyboard.press("/");
+  await expect(search).toBeFocused();
+  await expect(search).toHaveValue(poi.name);
+  await page.keyboard.press("Escape");
+  await expect(search).toHaveValue("");
+  await expect(sheet).toBeVisible();
+  await expect(page).toHaveURL(/&poi=poi-e2e-search-fixture$/);
 });
 
 test("failed base map tiles show a banner that retries and dismisses", async ({
