@@ -18,5 +18,7 @@ export default defineConfig({
     command: isCI ? "pnpm start" : "pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !isCI,
+    // Tile requests are stubbed per test; CI sets the same value at build time.
+    env: { NEXT_PUBLIC_TILE_BASE_URL: "/tiles/v1" },
   },
 });

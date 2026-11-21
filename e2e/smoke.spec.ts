@@ -166,3 +166,53 @@ test("search flies to and selects the picked POI", async ({ page }) => {
     /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
   );
 });
+
+test("failed base map tiles show a banner that retries and dismisses", async ({
+  page,
+}) => {
+  let failing = true;
+  const failedUrls = new Set<string>();
+  await page.route("**/tiles/v1/**", (route) => {
+    if (failing) failedUrls.add(route.request().url());
+    return route.fulfill({ status: failing ? 503 : 404 });
+  });
+  await page.goto("/");
+
+  const banner = page.getByRole("alert").filter({ hasText: "tiles failed" });
+  await expect(banner).toBeVisible();
+  // The map stays interactive underneath. Let the camera settle so every tile
+  // the new view wants has been requested (and failed) before retrying.
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(page).toHaveURL(/#map=12\.50\//);
+
+  // Retry refetches a tile that failed; this time it comes back empty.
+  failing = false;
+  const retried = page.waitForResponse(
+    (response) => failedUrls.has(response.url()) && response.status() === 404,
+  );
+  await banner.getByRole("button", { name: "Retry" }).click();
+  await retried;
+  await expect(banner).toBeHidden();
+
+  // A new zoom level requests uncached tiles, so a fresh failure reopens it.
+  failing = true;
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(banner).toBeVisible();
+  await banner.getByRole("button", { name: "Dismiss tile error" }).click();
+  await expect(banner).toBeHidden();
+
+  // Dismiss sticks: failures on the next zoom level don't reopen it. Wait for
+  // the app's error handler, then two frames so React has committed.
+  const failedAgain = page.waitForEvent("console", (message) =>
+    message.text().includes("Base map tile failed to load"),
+  );
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await failedAgain;
+  await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ),
+  );
+  await expect(banner).toBeHidden();
+});

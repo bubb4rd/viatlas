@@ -34,6 +34,7 @@ import {
   ZOOM_STEP,
   zoomBy,
 } from "../camera";
+import { createBaseTileLayer } from "../layers/base-tile-layer";
 import { createGridLayer } from "../layers/grid-layer";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
 import { parsePoiHash } from "../url-pois";
@@ -41,9 +42,13 @@ import { formatMapHash } from "../url-state";
 import { usePickingWarmUp } from "../use-picking-warm-up";
 import { worldToLngLat } from "../world";
 import { MapControls } from "./map-controls";
+import { TileErrorBanner } from "./tile-error-banner";
 import { ViewModeToggle } from "./view-mode-toggle";
 
 const VIEW = new MapView({ repeat: false });
+
+/** Versioned tile root (ADR-0007). Unset: no base map, grid and POIs only. */
+const TILE_BASE_URL = process.env.NEXT_PUBLIC_TILE_BASE_URL;
 
 /** Quiet time after the last camera frame before the URL is rewritten. */
 const URL_WRITE_DELAY_MS = 250;
@@ -88,6 +93,12 @@ export default function MapCanvas() {
   const modeRef = useRef<ViewMode>(mode);
   const urlWriteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pickingWarmUp = usePickingWarmUp();
+  // Changes once per failure burst (React bails out on the same value), not per
+  // frame. Dismissed stays dismissed until Retry or a reload.
+  const [tileNotice, setTileNotice] = useState<
+    "hidden" | "shown" | "dismissed"
+  >("hidden");
+  const [tileRetryKey, setTileRetryKey] = useState(0);
 
   function scheduleUrlWrite() {
     clearTimeout(urlWriteTimer.current);
@@ -196,6 +207,18 @@ export default function MapCanvas() {
     ? DEFAULT_VISIBLE_POIS
     : filterPois(POIS, poiFilter);
   const layers = [
+    TILE_BASE_URL
+      ? createBaseTileLayer({
+          baseUrl: TILE_BASE_URL,
+          retryKey: tileRetryKey,
+          onTileError: (error) => {
+            console.error("Base map tile failed to load", error);
+            setTileNotice((notice) =>
+              notice === "dismissed" ? notice : "shown",
+            );
+          },
+        })
+      : null,
     createGridLayer(),
     createPoiLayer({
       pois: visiblePois,
@@ -239,6 +262,15 @@ export default function MapCanvas() {
         selectedPoiId={selectedPoiId}
         onSelect={handleListSelect}
       />
+      {tileNotice === "shown" && (
+        <TileErrorBanner
+          onRetry={() => {
+            setTileNotice("hidden");
+            setTileRetryKey((key) => key + 1);
+          }}
+          onDismiss={() => setTileNotice("dismissed")}
+        />
+      )}
       <MapControls
         onZoomIn={() => flyTo(zoomBy(latestViewState.current, ZOOM_STEP))}
         onZoomOut={() => flyTo(zoomBy(latestViewState.current, -ZOOM_STEP))}

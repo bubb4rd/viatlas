@@ -47,6 +47,8 @@ See [ADR-0004](../docs/adr/0004-poi-data-and-clustering.md).
 2. Run `pnpm tiles`. Output goes to `public/tiles/v1/{z}/{x}/{y}.webp` plus `manifest.json`.
    Options: `--source <file>`, `--out <dir>`, `--version v2`, `--quality 1–100` (default 80).
 3. Upload `public/tiles/<version>/` to the CDN as a new immutable prefix. Never commit tiles.
+4. Point the app at it: set `NEXT_PUBLIC_TILE_BASE_URL` in `.env.local` to the version root,
+   `/tiles/v1` locally or the CDN prefix in production. Unset, the map shows only the grid and POIs.
 
 The script fails and deletes the output if any tile is over 100,000 bytes, listing the offenders.
 Simplify those areas of the artwork or lower `--quality`. It also refuses to overwrite an existing

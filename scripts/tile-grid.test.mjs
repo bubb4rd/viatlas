@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
+import {
+  TILE_SIZE_PX as LAYER_TILE_SIZE_PX,
+  TILE_MAX_ZOOM,
+  TILE_MIN_ZOOM,
+} from "../src/features/map/layers/base-tile-layer.ts";
 import { EARTH_RADIUS_M, WORLD_BOUNDS } from "../src/features/map/world.ts";
 import {
   MAX_TILE_BYTES,
+  MAX_ZOOM,
+  MIN_ZOOM,
   overBudget,
   pyramid,
+  TILE_SIZE_PX,
   tileBoundsM,
   tileRange,
   tileSizeM,
@@ -14,6 +22,12 @@ import {
 const SOURCE = { width: 3000, height: 4000 };
 
 describe("tile grid", () => {
+  it("writes the pyramid the base tile layer requests", () => {
+    expect(TILE_SIZE_PX).toBe(LAYER_TILE_SIZE_PX);
+    expect(MIN_ZOOM).toBe(TILE_MIN_ZOOM);
+    expect(MAX_ZOOM).toBe(TILE_MAX_ZOOM);
+  });
+
   it("halves tile size per zoom from the full Mercator world", () => {
     expect(tileSizeM(0)).toBeCloseTo(2 * Math.PI * EARTH_RADIUS_M, 6);
     expect(tileSizeM(16)).toBeCloseTo(611.4962, 4);
