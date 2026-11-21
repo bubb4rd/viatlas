@@ -79,7 +79,8 @@ or a Chrome Performance trace.
   Tests run in Node by default; component tests opt in with `// @vitest-environment jsdom`.
 - **Component:** Testing Library, querying by role or label. Never query by class name.
 - **E2E (Playwright):** critical journeys only (map loads, search flies to a result, deep links).
-  Keep the suite under 2 minutes.
+  Keep the suite under 2 minutes. Specs that need POIs inject fixtures through
+  `__VIATLAS_E2E_POIS__` (`src/features/pois/data.ts`), never real-looking data in `data/`.
 - Every bug fix comes with a regression test.
 - Don't snapshot WebGL output.
 
