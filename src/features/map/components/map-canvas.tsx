@@ -24,6 +24,8 @@ import {
 import type { Poi } from "@/features/pois/poi";
 import { PoiSearch } from "@/features/search/components/poi-search";
 import {
+  CAMERA_INERTIA_MS,
+  cameraTransition,
   FLY_TO_TRANSITION,
   focusOn,
   INITIAL_VIEW_STATE,
@@ -36,10 +38,12 @@ import {
 } from "../camera";
 import { createBaseTileLayer } from "../layers/base-tile-layer";
 import { createGridLayer } from "../layers/grid-layer";
+import { MotionAwareMapController } from "../motion-aware-map-controller";
 import { formatCameraHash, parseCameraHash } from "../url-camera";
 import { parsePoiHash } from "../url-pois";
 import { formatMapHash } from "../url-state";
 import { usePickingWarmUp } from "../use-picking-warm-up";
+import { useReducedMotion } from "../use-reduced-motion";
 import { worldToLngLat } from "../world";
 import { MapControls } from "./map-controls";
 import { TileErrorBanner } from "./tile-error-banner";
@@ -93,6 +97,7 @@ export default function MapCanvas() {
   const modeRef = useRef<ViewMode>(mode);
   const urlWriteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pickingWarmUp = usePickingWarmUp();
+  const reduceMotion = useReducedMotion();
   // Changes once per failure burst (React bails out on the same value), not per
   // frame. Dismissed stays dismissed until Retry or a reload.
   const [tileNotice, setTileNotice] = useState<
@@ -141,14 +146,27 @@ export default function MapCanvas() {
     }
   }, [poiFilter, selectedPoiId]);
 
+  /** Moves the camera, animated unless the OS asks for reduced motion. */
+  function moveCamera(
+    next: MapViewState,
+    transition: typeof MODE_TRANSITION | typeof FLY_TO_TRANSITION,
+  ) {
+    const move = cameraTransition(transition, reduceMotion);
+    setInitialViewState({ ...next, ...move });
+    // deck.gl reports animated moves through onViewStateChange, but not jumps.
+    if (move.transitionDuration === 0) {
+      latestViewState.current = next;
+      scheduleUrlWrite();
+    }
+  }
+
   function changeMode(next: ViewMode) {
     modeRef.current = next;
     setMode(next);
-    setInitialViewState({
-      ...latestViewState.current,
-      ...MODE_POSE[next],
-      ...MODE_TRANSITION,
-    });
+    moveCamera(
+      { ...latestViewState.current, ...MODE_POSE[next] },
+      MODE_TRANSITION,
+    );
   }
 
   function changePoiFilter(next: PoiFilter) {
@@ -175,13 +193,7 @@ export default function MapCanvas() {
       maxZoom: INITIAL_VIEW_STATE.maxZoom,
     });
     const [longitude, latitude] = worldToLngLat(center);
-    setInitialViewState({
-      ...current,
-      longitude,
-      latitude,
-      zoom,
-      ...FLY_TO_TRANSITION,
-    });
+    flyTo({ ...current, longitude, latitude, zoom });
   }
 
   // Read the live camera, since the hash lags it by URL_WRITE_DELAY_MS.
@@ -195,7 +207,7 @@ export default function MapCanvas() {
   }
 
   function flyTo(next: MapViewState) {
-    setInitialViewState({ ...next, ...FLY_TO_TRANSITION });
+    moveCamera(next, FLY_TO_TRANSITION);
   }
 
   function handleListSelect(poi: Poi) {
@@ -236,7 +248,14 @@ export default function MapCanvas() {
         {...pickingWarmUp}
         views={VIEW}
         initialViewState={initialViewState}
-        controller={{ dragRotate: is3d, touchRotate: is3d, keyboard: true }}
+        controller={{
+          type: MotionAwareMapController,
+          dragRotate: is3d,
+          touchRotate: is3d,
+          keyboard: true,
+          // A fling keeps the camera moving after the finger lifts.
+          inertia: reduceMotion ? false : CAMERA_INERTIA_MS,
+        }}
         onViewStateChange={({ viewState }) => {
           latestViewState.current = viewState as MapViewState;
           scheduleUrlWrite();

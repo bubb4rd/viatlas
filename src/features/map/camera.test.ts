@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  cameraTransition,
+  FLY_TO_TRANSITION,
   focusOn,
   INITIAL_VIEW_STATE,
+  MODE_TRANSITION,
   POI_FOCUS_ZOOM,
   resetView,
   zoomBy,
@@ -49,6 +52,20 @@ describe("resetView", () => {
 
   it("stays top-down in 2D", () => {
     expect(resetView(moved, "2d")).toMatchObject({ pitch: 0, bearing: 0 });
+  });
+});
+
+describe("cameraTransition", () => {
+  it("keeps the transition when motion is allowed", () => {
+    expect(cameraTransition(FLY_TO_TRANSITION, false)).toBe(FLY_TO_TRANSITION);
+  });
+
+  it("jumps instantly under reduced motion", () => {
+    const next = cameraTransition(MODE_TRANSITION, true);
+    expect(next.transitionDuration).toBe(0);
+    expect(next.transitionInterpolator).toBe(
+      MODE_TRANSITION.transitionInterpolator,
+    );
   });
 });
 

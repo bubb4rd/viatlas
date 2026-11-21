@@ -42,7 +42,9 @@ Biome, `tsc`, and CI enforce what they can. This page covers the rest.
 - Set `pickable: true` only on layers that need interaction.
 - Drive animation (for example TripsLayer `currentTime`) with `requestAnimationFrame` and deck
   props, never with React re-renders.
-- Respect `prefers-reduced-motion`: pause ambient animation and shorten camera transitions.
+- Respect `prefers-reduced-motion`: pause ambient animation, and make camera moves jump instead of
+  animate. App moves (fly-to, mode switch) use `cameraTransition` in `src/features/map/camera.ts`;
+  deck.gl's keyboard and double-tap zooms go through `MotionAwareMapController`.
 - Check APIs against the v9 docs. Older snippets found online are often v8.
 
 ## Styling
