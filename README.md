@@ -70,9 +70,9 @@ Every map view is a static link stored in the URL hash, so navigating or sharing
 - **Filters & selection:** `#hide=<categories>`, `#speculative=1`, and `#poi=<id>` restore the Intel Layers filter and the selected POI on load and on `hashchange`.
 - **Deep-link helpers:** [`src/features/map/url-state.ts`](src/features/map/url-state.ts) parses and serializes every key while preserving unknown hash keys and clamping out-of-range values. Camera updates debounce `250 ms` after motion settles via `replaceState`.
 
-### Zero-dependency POI search
+### POI search
 
-[`src/features/search/poi-search.ts`](src/features/search/poi-search.ts) provides a pure client-side search index with accent-, case-, and punctuation-insensitive multi-token matching across POI names, aliases, and categories. Results rank deterministically by match quality and confidence while strictly respecting active category and speculative filters. _(HUD search bar wiring is in progress for Phase 1.)_
+A Base UI combobox at the top of the HUD searches POI names, aliases, and categories. Press `/` to focus it from anywhere but another text field. Arrow keys and `Enter` pick a result, which selects the POI and flies the camera there, the same as the POI list. [`src/features/search/poi-search.ts`](src/features/search/poi-search.ts) is the pure, zero-dependency matcher behind it: accent-, case-, and punctuation-insensitive, ranked deterministically, and it never returns POIs hidden by the active filters.
 
 ## Data and provenance
 
@@ -165,7 +165,7 @@ flowchart LR
 src/app/                 Thin App Router shell, metadata, and design tokens (globals.css)
 src/features/map/        MapShell, MapCanvas, camera modes, world math, URL state, GridLayer
 src/features/pois/       POI schema & validator, clustering, category filter popover, PoiLayer
-src/features/search/     Pure multi-token POI search index and deterministic ranker
+src/features/search/     POI search index and ranker, HUD search combobox
 data/pois/               Reviewed, source-cited POI JSON arrays (one file per category)
 scripts/                 Repo and data pipeline tooling (commit-msg hook validator)
 e2e/                     Playwright smoke specs

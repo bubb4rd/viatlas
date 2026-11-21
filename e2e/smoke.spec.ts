@@ -110,3 +110,59 @@ test("POI list panel toggles from the keyboard", async ({ page }) => {
   await expect(panel).toBeHidden();
   await expect(toggle).toBeFocused();
 });
+
+test("search focuses on / and explains an empty result", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  const search = page.getByRole("combobox", { name: "Search POIs" });
+  await page.keyboard.press("/");
+  await expect(search).toBeFocused();
+
+  // Typing / inside the field types it rather than re-triggering the shortcut.
+  await page.keyboard.type("zz/zz");
+  await expect(search).toHaveValue("zz/zz");
+  await expect(page.getByRole("status")).toContainText("No matches");
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toBeHidden();
+});
+
+test("search flies to and selects the picked POI", async ({ page }) => {
+  // Fixture, not real data: no reviewed POIs ship yet (see src/features/pois/data.ts).
+  const poi = {
+    id: "poi-e2e-search-fixture",
+    name: "E2E Search Fixture",
+    category: "landmark",
+    position: [1500, -2500],
+    source: {
+      kind: "trailer",
+      ref: "E2E fixture, not real data",
+      addedBy: "e2e",
+    },
+    confidence: "likely",
+  };
+  await page.addInitScript((landmark) => {
+    Object.assign(globalThis, {
+      __VIATLAS_E2E_POIS__: {
+        landmark: [landmark],
+        business: [],
+        activity: [],
+        transport: [],
+        nature: [],
+      },
+    });
+  }, poi);
+
+  await page.goto("/#map=11.50/0/0");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  await page.keyboard.press("/");
+  await page.keyboard.type("search fixture");
+  await page.getByRole("option", { name: poi.name }).click();
+
+  await expect(page.getByRole("dialog", { name: poi.name })).toBeVisible();
+  await expect(page).toHaveURL(
+    /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
+  );
+});

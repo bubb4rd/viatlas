@@ -22,6 +22,7 @@ import {
   getPoiTooltip,
 } from "@/features/pois/layers/poi-layer";
 import type { Poi } from "@/features/pois/poi";
+import { PoiSearch } from "@/features/search/components/poi-search";
 import {
   FLY_TO_TRANSITION,
   focusOn,
@@ -230,6 +231,7 @@ export default function MapCanvas() {
           pois={POIS}
           onChange={changePoiFilter}
         />
+        <PoiSearch pois={POIS} filter={poiFilter} onSelect={handleListSelect} />
         <ViewModeToggle mode={mode} onChange={changeMode} />
       </div>
       <PoiListPanel
