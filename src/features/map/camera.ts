@@ -39,6 +39,20 @@ export const FLY_TO_TRANSITION = {
   transitionInterpolator: new FlyToInterpolator(),
 } as const;
 
+/** Pan and pinch fling duration, in ms, like a native map. */
+export const CAMERA_INERTIA_MS = 300;
+
+/**
+ * A camera transition, or an instant jump under `prefers-reduced-motion`.
+ * Fly-to arcs and pitch swings are the moves most likely to cause discomfort.
+ */
+export function cameraTransition<T extends { transitionDuration: number }>(
+  transition: T,
+  reduceMotion: boolean,
+): Omit<T, "transitionDuration"> & { transitionDuration: number } {
+  return reduceMotion ? { ...transition, transitionDuration: 0 } : transition;
+}
+
 /** Zoom levels per HUD +/- press. */
 export const ZOOM_STEP = 1;
 
