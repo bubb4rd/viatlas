@@ -8,7 +8,8 @@ function subscribe(onChange: () => void) {
   return () => media.removeEventListener("change", onChange);
 }
 
-function getSnapshot() {
+/** True while the OS asks for reduced motion, read at call time. */
+export function prefersReducedMotion(): boolean {
   return window.matchMedia(QUERY).matches;
 }
 
@@ -17,5 +18,5 @@ function getSnapshot() {
  * setting changes, never per frame. Client-only, like the map.
  */
 export function useReducedMotion(): boolean {
-  return useSyncExternalStore(subscribe, getSnapshot);
+  return useSyncExternalStore(subscribe, prefersReducedMotion);
 }
