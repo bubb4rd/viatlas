@@ -1,4 +1,20 @@
+import { readdirSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
+
+type PoiRecord = {
+  id: string;
+  name: string;
+  position: [number, number];
+  confidence: string;
+};
+
+// Reviewed data from data/pois/, so the journey runs once real POIs ship.
+const firstShownPoi = readdirSync("data/pois")
+  .flatMap(
+    (file) =>
+      JSON.parse(readFileSync(`data/pois/${file}`, "utf8")) as PoiRecord[],
+  )
+  .find((poi) => poi.confidence !== "speculative");
 
 test("map renders and switches camera mode", async ({ page }) => {
   const errors: string[] = [];
@@ -109,4 +125,38 @@ test("POI list panel toggles from the keyboard", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(panel).toBeHidden();
   await expect(toggle).toBeFocused();
+});
+
+test("search focuses on / and explains an empty result", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  const search = page.getByRole("combobox", { name: "Search POIs" });
+  await page.keyboard.press("/");
+  await expect(search).toBeFocused();
+
+  // Typing / inside the field types it rather than re-triggering the shortcut.
+  await page.keyboard.type("zz/zz");
+  await expect(search).toHaveValue("zz/zz");
+  await expect(page.getByRole("status")).toContainText("No matches");
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toBeHidden();
+});
+
+test("search flies to and selects the picked POI", async ({ page }) => {
+  test.skip(!firstShownPoi, "No reviewed POIs ship yet");
+  if (!firstShownPoi) return;
+  const { id, name, position } = firstShownPoi;
+
+  await page.goto("/#map=11.50/0/0");
+  await expect(page.locator("canvas").first()).toBeVisible();
+
+  await page.keyboard.press("/");
+  await page.keyboard.type(name);
+  await page.getByRole("option", { name }).first().click();
+
+  await expect(page.getByRole("dialog", { name })).toBeVisible();
+  const [x, y] = position.map(Math.round);
+  await expect(page).toHaveURL(new RegExp(`#map=15\\.00/${x}/${y}&poi=${id}$`));
 });
