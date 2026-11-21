@@ -47,7 +47,7 @@ and git-exclusion policy ([data-and-assets.md](../data-and-assets.md#formats-and
     `Content-Type: image/webp`, and restrict CORS (`Access-Control-Allow-Origin`) to production and
     Netlify preview origins so WebGL textures load cleanly with `crossOrigin="anonymous"`.
 - **Local dev & failure/fallback behavior:**
-  - `data/raw/` and `public/tiles/` remain gitignored. Locally, `NEXT_PUBLIC_TILE_BASE_URL=/tiles`
+  - `data/raw/` and `public/tiles/` remain gitignored. Locally, `NEXT_PUBLIC_TILE_BASE_URL=/tiles/v1`
     serves developer-built tiles; when unset, `TileLayer` stays inactive and the tactical grid +
     POIs render normally.
   - Tiles outside `extent` are never fetched. HTTP `404` responses (sparse ocean edges) return

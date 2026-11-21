@@ -166,3 +166,29 @@ test("search flies to and selects the picked POI", async ({ page }) => {
     /#map=15\.00\/1500\/-2500&poi=poi-e2e-search-fixture$/,
   );
 });
+
+test("failed base map tiles show a banner that retries and dismisses", async ({
+  page,
+}) => {
+  let failing = true;
+  await page.route("**/tiles/v1/**", (route) =>
+    route.fulfill({ status: failing ? 503 : 404 }),
+  );
+  await page.goto("/");
+
+  const banner = page.getByRole("alert").filter({ hasText: "tiles failed" });
+  await expect(banner).toBeVisible();
+  // The map stays interactive underneath.
+  await page.getByRole("button", { name: "Zoom in" }).click();
+
+  failing = false;
+  await banner.getByRole("button", { name: "Retry" }).click();
+  await expect(banner).toBeHidden();
+
+  // A new zoom level requests uncached tiles, so a fresh failure reopens it.
+  failing = true;
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(banner).toBeVisible();
+  await banner.getByRole("button", { name: "Dismiss tile error" }).click();
+  await expect(banner).toBeHidden();
+});
